@@ -82,13 +82,6 @@ int main(int argc, char *argv[]) {
     long long n_part = std::stoll(argv[4]);
     long long time_steps = std::stoll(argv[5]);
 
-    // Print parsed values (optional, for debugging)
-    std::cout << "Seed: " << seed << "\n"
-              << "Side: " << side << "\n"
-              << "ncside: " << ncside << "\n"
-              << "Particles: " << n_part << "\n"
-              << "Time Steps: " << time_steps << "\n";
-
     init_particles(seed, side, ncside, n_part, particles);
 
     exec_time = -omp_get_wtime();
