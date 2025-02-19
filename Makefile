@@ -20,7 +20,7 @@ CPPFLAGS ?= $(INCLUDE_FLAG)
 LDFLAGS ?= -fopenmp
 
 # final target
-$(BUILD_PATH)/$(TARGET_EXEC): $(OBJS)
+$(TARGET_EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
 
 # build all dependencies
