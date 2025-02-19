@@ -1,5 +1,6 @@
 #define _USE_MATH_DEFINES
 
+#include "Particle.hpp"
 #include <cmath>
 #include <iostream>
 #include <omp.h>
@@ -33,7 +34,7 @@ double rnd_normal01() {
 }
 
 void init_particles(long seed, double side, long ncside, long long n_part,
-                    particle_t *par) {
+                    std::vector<Particle> &par) {
 
   double (*rnd01)() = rnd_uniform01;
   long long i;
@@ -44,6 +45,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   }
 
   init_r4uni(seed);
+  par.resize(n_part);
 
   for (i = 0; i < n_part; i++) {
     par[i].x = rnd01() * side;
@@ -55,9 +57,19 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   }
 }
 
+void simulation() {
+  // TODO
+}
+
+void print_result() {
+  // TODO
+}
+
 int main(int argc, char *argv[]) {
   double exec_time;
-  init_particles(...);
+  std::vector<Particle> particles;
+
+  init_particles(particles);
 
   exec_time = -omp_get_wtime();
   simulation();
