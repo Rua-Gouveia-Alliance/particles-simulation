@@ -35,7 +35,6 @@ double rnd_normal01() {
 
 void init_particles(long seed, double side, long ncside, long long n_part,
                     std::vector<Particle> &par) {
-
   double (*rnd01)() = rnd_uniform01;
   long long i;
 
@@ -48,16 +47,16 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par.resize(n_part);
 
   for (i = 0; i < n_part; i++) {
-    par[i].x = rnd01() * side;
-    par[i].y = rnd01() * side;
-    par[i].vx = (rnd01() - 0.5) * side / ncside / 5.0;
-    par[i].vy = (rnd01() - 0.5) * side / ncside / 5.0;
+    par[i]._x = rnd01() * side;
+    par[i]._y = rnd01() * side;
+    par[i]._vx = (rnd01() - 0.5) * side / ncside / 5.0;
+    par[i]._vy = (rnd01() - 0.5) * side / ncside / 5.0;
 
-    par[i].m = rnd01() * 0.01 * (ncside * ncside) / n_part / G * EPSILON2;
+    par[i]._m = rnd01() * 0.01 * (ncside * ncside) / n_part / G * EPSILON2;
   }
 }
 
-void simulation() {
+void simulation(std::vector<Particle> &par) {
   // TODO
 }
 
@@ -67,16 +66,43 @@ void print_result() {
 
 int main(int argc, char *argv[]) {
   double exec_time;
+  long long ll;
   std::vector<Particle> particles;
 
-  init_particles(particles);
+  if (argc != 6) {
+    std::cerr << "Usage: " << argv[0]
+              << " <seed> <side> <ncside> <n_part> <time_steps>\n";
+    return 1;
+  }
 
-  exec_time = -omp_get_wtime();
-  simulation();
-  exec_time += omp_get_wtime();
+  try {
+    long seed = std::stol(argv[1]);
+    double side = std::stod(argv[2]);
+    long ncside = std::stol(argv[3]);
+    long long n_part = std::stoll(argv[4]);
+    long long time_steps = std::stoll(argv[5]);
 
-  fprintf(stderr, "%.1fs\n", exec_time);
-  print_result(); // to stdout
+    // Print parsed values (optional, for debugging)
+    std::cout << "Seed: " << seed << "\n"
+              << "Side: " << side << "\n"
+              << "ncside: " << ncside << "\n"
+              << "Particles: " << n_part << "\n"
+              << "Time Steps: " << time_steps << "\n";
+
+    init_particles(seed, side, ncside, n_part, particles);
+
+    exec_time = -omp_get_wtime();
+    for (ll = 0; ll < time_steps; ll++) {
+      simulation(particles);
+    }
+    exec_time += omp_get_wtime();
+
+    fprintf(stderr, "%.1fs\n", exec_time);
+    print_result(); // to stdout
+  } catch (const std::exception &e) {
+    std::cerr << "Error: Invalid input." << e.what() << "\n";
+    return 1;
+  }
 
   return 0;
 }
