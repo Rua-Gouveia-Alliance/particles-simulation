@@ -1,7 +1,9 @@
 #define _USE_MATH_DEFINES
 
-#include <math.h>
+#include <cmath>
+#include <iostream>
 #include <omp.h>
+#include <vector>
 
 #define G 6.67408e-11
 #define EPSILON2 (0.005 * 0.005)
@@ -16,7 +18,7 @@ double rnd_uniform01() {
   seed ^= (seed << 13);
   seed ^= (seed >> 17);
   seed ^= (seed << 5);
-  return 0.5 + 0.2328306e-09 * (seed_in + (int)seed);
+  return 0.5 + 0.2328306e-09 * (seed_in + static_cast<int>(seed));
 }
 
 double rnd_normal01() {
@@ -24,9 +26,8 @@ double rnd_normal01() {
   do {
     u1 = rnd_uniform01();
     u2 = rnd_uniform01();
-    z = sqrt(-2 * log(u1)) * cos(2 * M_PI * u2);
-    result = 0.5 + 0.15 * z;
-    // Shift mean to 0.5 and scale
+    z = std::sqrt(-2 * std::log(u1)) * std::cos(2 * M_PI * u2);
+    result = 0.5 + 0.15 * z; // Shift mean to 0.5 and scale
   } while (result < 0 || result >= 1);
   return result;
 }
@@ -57,10 +58,13 @@ void init_particles(long seed, double side, long ncside, long long n_part,
 int main(int argc, char *argv[]) {
   double exec_time;
   init_particles(...);
+
   exec_time = -omp_get_wtime();
   simulation();
   exec_time += omp_get_wtime();
+
   fprintf(stderr, "%.1fs\n", exec_time);
-  print_result();
-  // to the stdout!
+  print_result(); // to stdout
+
+  return 0;
 }
