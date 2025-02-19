@@ -17,6 +17,7 @@ INCLUDE_FLAG := $(addprefix -I, $(INCLUDE_PATH))
 
 # flags
 CPPFLAGS ?= $(INCLUDE_FLAG)
+LDFLAGS ?= -fopenmp
 
 # final target
 $(BUILD_PATH)/$(TARGET_EXEC): $(OBJS)
