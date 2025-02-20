@@ -22,6 +22,7 @@ public:
   void update_cells();
   void print_cells();
   Particle get_first_particle();
+  long get_collisions();
 };
 
 #endif

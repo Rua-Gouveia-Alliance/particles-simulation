@@ -98,7 +98,7 @@ void print_result(Grid &g) {
   g.print_cells(); // debug
   Particle pf = g.get_first_particle();
   std::cout << pf._x << " " << pf._y << std::endl;
-  // std::cout << g.get_collisions() << std::endl;
+  std::cout << g.get_collisions() << std::endl;
 }
 
 int main(int argc, char *argv[]) {

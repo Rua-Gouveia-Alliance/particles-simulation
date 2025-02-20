@@ -20,6 +20,8 @@ private:
   void _update_center_of_mass();
 
 public:
+  long _collisions = 0;
+
   Cell(double x, double y, long side);
 
   void add_particle(Particle &p);

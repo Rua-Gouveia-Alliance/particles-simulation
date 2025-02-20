@@ -75,6 +75,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       if (distance_sq < EPSILON2) {
         // add a counter maybe
         collided = true;
+        this->_collisions++;
         break;
       }
 

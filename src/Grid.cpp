@@ -83,3 +83,11 @@ Particle Grid::get_first_particle() {
   }
   return Particle();
 }
+
+long Grid::get_collisions() {
+  long total = 0;
+  for (auto &c : this->_cells) {
+    total += c._collisions;
+  }
+  return total;
+}
