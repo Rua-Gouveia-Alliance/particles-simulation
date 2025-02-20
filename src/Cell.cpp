@@ -37,13 +37,8 @@ void Cell::_update_center_of_mass() {
 void Cell::add_particle(Particle &p) { this->_temp_particles.push_back(p); }
 
 bool Cell::is_particle_inside(Particle &p) {
-  double bb_ix = this->_x, bb_iy = this->_y, bb_ax = this->_x + this->_side,
-         bb_ay = this->_y + this->_side, p_x = p._x, p_y = p._y;
-
-  if (bb_ix <= p_x && p_x <= bb_ax && bb_iy <= p_y && p_y <= bb_ay) {
-    return true;
-  }
-  return false;
+  return this->_x <= p._x && p._x <= this->_x + this->_side && this->_y <= p._y &&
+      p._y <= this->_y + this->_side;
 }
 
 std::vector<Particle>
@@ -144,4 +139,4 @@ void Cell::print_particles() {
 double Cell::get_center_of_mass_x() { return this->_center_of_mass_x; }
 double Cell::get_center_of_mass_y() { return this->_center_of_mass_y; }
 double Cell::get_cell_mass() { return this->_mass; }
-std::vector<Particle>& Cell::get_particles() { return this->_particles; }
+std::vector<Particle> &Cell::get_particles() { return this->_particles; }
