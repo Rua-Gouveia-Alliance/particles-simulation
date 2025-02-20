@@ -6,7 +6,7 @@
 
 class Grid {
 private:
-  std::vector<Cell> cells;
+  std::vector<Cell> _cells;
 
 public:
   Grid();

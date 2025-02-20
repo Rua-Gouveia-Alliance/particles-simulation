@@ -19,6 +19,7 @@ public:
 
   void add_particle(Particle &p);
   bool is_particle_inside(Particle &p);
+  void update_particles(std::vector<Cell> adjacent_cells);
   void update_collisions();
   void finish_update();
 
