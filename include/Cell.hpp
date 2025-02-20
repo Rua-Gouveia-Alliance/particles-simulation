@@ -8,21 +8,22 @@ class Cell {
 private:
   std::vector<Particle> _particles;
   double _x, _y;
-  long side;
-  double center_of_mass;
+  long _side;
+  double _center_of_mass_x, _center_of_mass_y, _mass;
 
-  void update_center_of_mass();
-  void remove_collided();
+  void _update_center_of_mass();
+  void _remove_collided();
 
 public:
   Cell(double x, double y, long side);
 
-  void add_particle(Particle p);
-  bool is_particle_inside(Particle p);
+  void add_particle(Particle &p);
+  bool is_particle_inside(Particle &p);
   void update_collisions();
   void finish_update();
 
-  double get_center_of_mass();
+  double get_center_of_mass_x();
+  double get_center_of_mass_y();
   double get_cell_mass();
 };
 
