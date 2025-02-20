@@ -26,7 +26,12 @@ void Cell::_update_center_of_mass() {
 }
 
 void Cell::_remove_collided() {
-  // TODO
+  for (long long i = 0; i < this->_particles.size(); i++) {
+    if (this->_particles[i]._collided) {
+      this->_particles.erase(this->_particles.begin() + i);
+      i--;
+    }
+  }
 }
 
 void Cell::add_particle(Particle &p) { this->_temp_particles.push_back(p); }
