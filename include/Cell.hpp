@@ -11,11 +11,16 @@ private:
   long side;
   double center_of_mass;
 
+  void update_center_of_mass();
+  void remove_collided();
+
 public:
   Cell(double x, double y, long side);
 
   void add_particle(Particle p);
-  void update_center_of_mass();
+  bool is_particle_inside(Particle p);
+  void update_collisions();
+  void finish_update();
 
   double get_center_of_mass();
   double get_cell_mass();
