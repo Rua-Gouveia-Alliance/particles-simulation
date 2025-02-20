@@ -1,3 +1,5 @@
+#include "Cell.hpp"
+#include "Grid.hpp"
 #define _USE_MATH_DEFINES
 
 #include "Particle.hpp"
@@ -56,8 +58,37 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   }
 }
 
-void simulation(std::vector<Particle> &par) {
-  // TODO
+Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
+  Grid grid;
+  double cell_size = side / ncside;
+
+  // create cells
+  for (long i = 0; i < ncside; i++) {
+    for (long j = 0; j < ncside; j++) {
+      double x = i * cell_size;
+      double y = j * cell_size;
+
+      Cell cell(x, y, cell_size);
+      grid.add_cell(cell);
+    }
+  }
+
+  // assign particles to corresponding cells
+  for (auto &p : pv) {
+    long cell_x = static_cast<long>(p._x / cell_size);
+    long cell_y = static_cast<long>(p._y / cell_size);
+
+    long cell_idx = cell_x + cell_y * ncside;
+    grid._cells[cell_idx].add_particle(p);
+  }
+
+  return grid;
+}
+
+void simulation(Grid grid, long long time_steps) {
+  for (long long ll = 0; ll < time_steps; ll++) {
+    grid.update_cells();
+  }
 }
 
 void print_result() {
@@ -66,8 +97,8 @@ void print_result() {
 
 int main(int argc, char *argv[]) {
   double exec_time;
-  long long ll;
   std::vector<Particle> particles;
+  Grid grid;
 
   if (argc != 6) {
     std::cerr << "Usage: " << argv[0]
@@ -83,11 +114,10 @@ int main(int argc, char *argv[]) {
     long long time_steps = std::stoll(argv[5]);
 
     init_particles(seed, side, ncside, n_part, particles);
+    grid = init_grid(side, ncside, particles);
 
     exec_time = -omp_get_wtime();
-    for (ll = 0; ll < time_steps; ll++) {
-      simulation(particles);
-    }
+    simulation(grid, time_steps);
     exec_time += omp_get_wtime();
 
     fprintf(stderr, "%.1fs\n", exec_time);

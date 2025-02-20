@@ -6,9 +6,10 @@
 
 class Grid {
 private:
-  std::vector<Cell> _cells;
 
 public:
+  std::vector<Cell> _cells;
+
   Grid();
 
   void add_cell(Cell c);
