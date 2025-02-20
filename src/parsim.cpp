@@ -79,6 +79,11 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
     grid._cells[cell_idx].add_particle(p);
   }
 
+  // initialize cell
+  for (auto &c : grid._cells) {
+    c.finish_update();
+  }
+
   return grid;
 }
 
@@ -113,12 +118,10 @@ int main(int argc, char *argv[]) {
     long long time_steps = std::stoll(argv[5]);
 
     init_particles(seed, side, ncside, n_part, particles);
-    for (auto &p : particles) {
-      p.print_info();
-    }
-    std::cout << std::endl;
 
     Grid grid = init_grid(side, ncside, particles);
+    std::cout << "INITIAL GRID" << std::endl;
+    grid.print_cells();
 
     exec_time = -omp_get_wtime();
     simulation(grid, time_steps);

@@ -1,6 +1,7 @@
 #include "Cell.hpp"
 
 #include <cmath>
+#include <iostream>
 
 Cell::Cell(double x, double y, long side) : _x(x), _y(y), _side(side){};
 
@@ -15,6 +16,12 @@ void Cell::_update_mass() {
 void Cell::_update_center_of_mass() {
   double x_res = 0;
   double y_res = 0;
+
+  if (this->_mass == 0) {
+    this->_center_of_mass_x = -1;
+    this->_center_of_mass_y = -1;
+    return;
+  }
 
   for (Particle &p : this->_particles) {
     x_res += p._m * p._x;
@@ -78,6 +85,9 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
     // calculate resulting force for adjacent cells
     for (auto &ac : adjacent_cells) {
+      if (ac._mass == 0)
+        continue;
+
       dx = pi._x - ac._center_of_mass_x;
       dy = pi._y - ac._center_of_mass_y;
       distance_sq = std::pow(dx, 2) + std::pow(dy, 2);
