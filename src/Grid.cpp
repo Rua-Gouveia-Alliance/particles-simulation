@@ -37,4 +37,8 @@ void Grid::update_cells() {
 
     this->_cells[i].update_particles(adjacent_cells);
   }
+
+  for (auto &c : this->_cells) {
+    c.finish_update();
+  }
 }
