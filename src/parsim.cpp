@@ -95,10 +95,12 @@ void simulation(Grid &grid, long long time_steps) {
 }
 
 void print_result(Grid &g) {
-  g.print_cells(); // debug
+  // g.print_cells(); // debug
   Particle pf = g.get_first_particle();
-  std::cout << pf._x << " " << pf._y << std::endl;
-  std::cout << g.get_collisions() << std::endl;
+  fprintf(stdout, "%.3f %.3f\n", pf._x, pf._y);
+
+  // divided by 2 because A,B and B,A are just one collision
+  std::cout << g.get_collisions() / 2 << std::endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -121,8 +123,10 @@ int main(int argc, char *argv[]) {
     init_particles(seed, side, ncside, n_part, particles);
 
     Grid grid = init_grid(side, ncside, particles);
-    std::cout << "INITIAL GRID" << std::endl;
-    grid.print_cells();
+
+    // debug
+    // std::cout << "INITIAL GRID" << std::endl;
+    // grid.print_cells();
 
     exec_time = -omp_get_wtime();
     simulation(grid, time_steps);
