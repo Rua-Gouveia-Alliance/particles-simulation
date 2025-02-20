@@ -60,6 +60,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
       // TODO can be improved, only check if A,B and B,A collided once
       if (distance_sq < EPSILON2) {
+        //add a counter maybe 
         collided = true;
         break;
       }
