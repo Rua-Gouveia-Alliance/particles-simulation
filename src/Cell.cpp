@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 Cell::Cell(double x, double y, long side) : _x(x), _y(y), _side(side){};
 
@@ -67,7 +68,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
       // TODO can be improved, only check if A,B and B,A collided once
       if (distance_sq < EPSILON2) {
-        //add a counter maybe 
+        // add a counter maybe
         collided = true;
         break;
       }
@@ -121,6 +122,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
 void Cell::finish_update() {
   this->_particles = this->_temp_particles;
+  this->_temp_particles = std::vector<Particle>();
   this->_update_mass();
   this->_update_center_of_mass();
 }

@@ -93,19 +93,11 @@ void simulation(Grid &grid, long long time_steps) {
   }
 }
 
-void print_result(std::vector<Particle>& par) {
+void print_result(Grid &g) {
   // TODO this should print coords of particle 0 (two real values using three
   // decimal digits) in the first line, and the number of particles that
   // collided in the second line
-  
-  if (par.empty()) {
-    std::cerr << "No particles available.\n";
-    return;
-  }
-  std::cout << par[0]._x << " " << par[0]._y << std::endl;
-
-  //print counter of collisions
-  //g.print_cells();
+  g.print_cells();
 }
 
 int main(int argc, char *argv[]) {
@@ -136,8 +128,7 @@ int main(int argc, char *argv[]) {
     exec_time += omp_get_wtime();
 
     fprintf(stderr, "%.1fs\n", exec_time);
-    print_result(particles);
-    //print_result(grid); // to stdout
+    print_result(grid); // to stdout
   } catch (const std::exception &e) {
     std::cerr << "Error: Invalid input." << e.what() << "\n";
     return 1;
