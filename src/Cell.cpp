@@ -31,7 +31,7 @@ bool Cell::is_particle_inside(Particle &p) {
   return false;
 }
 
-void update_particles(std::vector<Cell> adjacent_cells) {
+void update_particles(std::vector<Cell> &adjacent_cells) {
   // TODO
 }
 
