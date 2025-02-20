@@ -47,6 +47,7 @@ void Cell::update_particles(std::vector<Cell> &adjacent_cells) {
     long long force = 0;
 
     // TODO calculate Fx and Fy, not only total F
+    // TODO check for collisions between particles
     // calculate resulting force for particles inside same cell
     for (long long j = 0; j < this->_particles.size(); j++) {
       if (i == j)
@@ -70,10 +71,6 @@ void Cell::update_particles(std::vector<Cell> &adjacent_cells) {
     // TODO create new particle with new acc, vel, pos and add it to this Cell's
     // temp particles, or another cell if it has changed
   }
-}
-
-void Cell::update_collisions() {
-  // TODO
 }
 
 void Cell::finish_update() {
