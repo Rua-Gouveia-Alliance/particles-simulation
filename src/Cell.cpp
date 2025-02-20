@@ -60,7 +60,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
     // calculate resulting force for particles inside same cell
     for (long long j = 0; j < this->_particles.size(); j++) {
-      // TODO nao percebi o comentario \/
+      // TODO nao percebi o comentario do arede \/
       // j= i + 1 //if we change to this we need to apply the force in opposite
       // directions.
 
@@ -73,7 +73,6 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
       // TODO can be improved, only check if A,B and B,A collided once
       if (distance_sq < EPSILON2) {
-        // add a counter maybe
         collided = true;
         this->_collisions++;
         break;
