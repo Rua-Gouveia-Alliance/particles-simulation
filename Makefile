@@ -30,3 +30,4 @@ $(BIN_PATH)/%.cpp.o: %.cpp
 
 clean:
 	$(RM) -r $(BUILD_PATH)
+	$(RM) $(TARGET_EXEC)
