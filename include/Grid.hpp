@@ -19,6 +19,7 @@ public:
   void add_cell(Cell &c);
   std::vector<long> get_adjacent_cells(long ci);
   void update_cells();
+  void print_cells();
 };
 
 #endif

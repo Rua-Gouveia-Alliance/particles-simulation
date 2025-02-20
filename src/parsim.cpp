@@ -2,6 +2,7 @@
 #include "Grid.hpp"
 #define _USE_MATH_DEFINES
 
+#include "Grid.hpp"
 #include "Particle.hpp"
 #include <cmath>
 #include <iostream>
@@ -55,7 +56,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
 }
 
 Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
-  Grid grid(side, ncside );
+  Grid grid(side, ncside);
   double cell_size = side / ncside;
 
   // create cells
@@ -87,14 +88,14 @@ void simulation(Grid grid, long long time_steps) {
   }
 }
 
-void print_result() {
-  // TODO
+void print_result(Grid &g) {
+  // TODO this should print particle 1
+  g.print_cells();
 }
 
 int main(int argc, char *argv[]) {
   double exec_time;
   std::vector<Particle> particles;
-  Grid grid;
 
   if (argc != 6) {
     std::cerr << "Usage: " << argv[0]
@@ -110,14 +111,14 @@ int main(int argc, char *argv[]) {
     long long time_steps = std::stoll(argv[5]);
 
     init_particles(seed, side, ncside, n_part, particles);
-    grid = init_grid(side, ncside, particles);
+    Grid grid = init_grid(side, ncside, particles);
 
     exec_time = -omp_get_wtime();
     simulation(grid, time_steps);
     exec_time += omp_get_wtime();
 
     fprintf(stderr, "%.1fs\n", exec_time);
-    print_result(); // to stdout
+    print_result(grid); // to stdout
   } catch (const std::exception &e) {
     std::cerr << "Error: Invalid input." << e.what() << "\n";
     return 1;

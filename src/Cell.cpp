@@ -114,6 +114,12 @@ void Cell::finish_update() {
   this->_update_center_of_mass();
 }
 
+void Cell::print_particles() {
+  for (auto &p : this->_particles) {
+    p.print_info();
+  }
+}
+
 double Cell::get_center_of_mass_x() { return this->_center_of_mass_x; }
 double Cell::get_center_of_mass_y() { return this->_center_of_mass_y; }
 double Cell::get_cell_mass() { return this->_mass; }

@@ -1,4 +1,5 @@
 #include "Grid.hpp"
+#include <iostream>
 
 Grid::Grid(long side, long ncside) : _side(side), _ncside(ncside) {}
 
@@ -60,5 +61,13 @@ void Grid::update_cells() {
 
   for (auto &c : this->_cells) {
     c.finish_update();
+  }
+}
+
+void Grid::print_cells() {
+  for (long i = 0; i < this->_cells.size(); i++) {
+    std::cout << "Cell " << i << std::endl;
+    this->_cells[i].print_particles();
+    std::cout << std::endl;
   }
 }

@@ -26,6 +26,7 @@ public:
   bool is_particle_inside(Particle &p);
   std::vector<Particle> update_particles(std::vector<Cell> &adjacent_cells);
   void finish_update();
+  void print_particles();
 
   double get_center_of_mass_x();
   double get_center_of_mass_y();
