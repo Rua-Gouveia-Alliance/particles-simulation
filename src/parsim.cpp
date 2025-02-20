@@ -89,7 +89,8 @@ void simulation(Grid grid, long long time_steps) {
 }
 
 void print_result(Grid &g) {
-  // TODO this should print particle 1
+  // TODO this should print coords of particle 0 (two real values using three
+  // decimal digits) in the first line, and the number of particles that collided in the second line
   g.print_cells();
 }
 
