@@ -2,9 +2,20 @@
 
 Grid::Grid(long side, long ncside) : _side(side), _ncside(ncside) {}
 
-void Grid::add_cell(Cell c) { this->_cells.push_back(c); }
+void Grid::_add_particle_to_cell(Particle &p) {
+  double cell_size = this->_side / this->_ncside;
+  long cell_x = static_cast<long>(p._x / cell_size);
+  long cell_y = static_cast<long>(p._y / cell_size);
+
+  long cell_idx = cell_x + cell_y * this->_ncside;
+  // TODO wrap around
+  this->_cells[cell_idx].add_particle(p);
+}
+
+void Grid::add_cell(Cell &c) { this->_cells.push_back(c); }
 
 std::vector<long> Grid::get_adjacent_cells(long ci) {
+  // TODO wrap around
   std::vector<long> adjacent;
   long cx = ci % this->_ncside;
   long cy = ci / this->_ncside;
@@ -35,7 +46,16 @@ void Grid::update_cells() {
       adjacent_cells.push_back(this->_cells[j]);
     }
 
-    this->_cells[i].update_particles(adjacent_cells);
+    std::vector<Particle> new_particles =
+        this->_cells[i].update_particles(adjacent_cells);
+
+    for (auto &p : new_particles) {
+      // TODO i dont know if this check improves performance or if its worse
+      if (this->_cells[i].is_particle_inside(p))
+        this->_cells[i].add_particle(p);
+      else
+        this->_add_particle_to_cell(p);
+    }
   }
 
   for (auto &c : this->_cells) {

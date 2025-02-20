@@ -18,14 +18,13 @@ private:
 
   void _update_mass();
   void _update_center_of_mass();
-  void _remove_collided();
 
 public:
   Cell(double x, double y, long side);
 
   void add_particle(Particle &p);
   bool is_particle_inside(Particle &p);
-  void update_particles(std::vector<Cell> &adjacent_cells);
+  std::vector<Particle> update_particles(std::vector<Cell> &adjacent_cells);
   void finish_update();
 
   double get_center_of_mass_x();

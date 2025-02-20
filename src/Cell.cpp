@@ -25,15 +25,6 @@ void Cell::_update_center_of_mass() {
   this->_center_of_mass_y = y_res / this->_mass;
 }
 
-void Cell::_remove_collided() {
-  for (long long i = 0; i < this->_particles.size(); i++) {
-    if (this->_particles[i]._collided) {
-      this->_particles.erase(this->_particles.begin() + i);
-      i--;
-    }
-  }
-}
-
 void Cell::add_particle(Particle &p) { this->_temp_particles.push_back(p); }
 
 bool Cell::is_particle_inside(Particle &p) {
@@ -46,41 +37,79 @@ bool Cell::is_particle_inside(Particle &p) {
   return false;
 }
 
-void Cell::update_particles(std::vector<Cell> &adjacent_cells) {
-  for (long long i = 0; i < this->_particles.size(); i++) {
-    Particle pi = this->_particles[i];
-    long long force = 0;
+std::vector<Particle>
+Cell::update_particles(std::vector<Cell> &adjacent_cells) {
+  std::vector<Particle> new_particles;
 
-    // TODO calculate Fx and Fy, not only total F
-    // TODO check for collisions between particles
+  for (long long i = 0; i < this->_particles.size(); i++) {
+    Particle &pi = this->_particles[i], new_particle;
+    double force;
+    double dx, dy, distance_sq, distance_sqrt;
+    double force_x = 0.0, force_y = 0.0;
+    double ax, ay;
+    bool collided = false;
+
     // calculate resulting force for particles inside same cell
     for (long long j = 0; j < this->_particles.size(); j++) {
       if (i == j)
         continue;
 
+      dx = pi._x - this->_particles[j]._x;
+      dy = pi._y - this->_particles[j]._y;
+      distance_sq = std::pow(dx, 2) + std::pow(dy, 2);
+
+      // TODO can be improved, only check if A,B and B,A collided once
+      if (distance_sq < EPSILON2) {
+        collided = true;
+        break;
+      }
+
       // TODO can be improved, only calculate the force for A,B and B,A once
-      force += G * this->_particles[i]._m * this->_particles[j]._m;
-      force /= std::pow(pi._x - this->_particles[j]._x, 2) +
-               std::pow(pi._y - this->_particles[j]._y, 2);
+      force = G * this->_particles[i]._m * this->_particles[j]._m;
+      force /= distance_sq;
+
+      distance_sqrt = std::sqrt(distance_sq);
+      force_x += force * (dx / distance_sqrt);
+      force_y += force * (dy / distance_sqrt);
     }
+
+    if (collided)
+      continue;
 
     // calculate resulting force for adjacent cells
     for (auto &ac : adjacent_cells) {
-      force += G * this->_particles[i]._m * ac._mass;
-      force /= std::pow(pi._x - ac._center_of_mass_x, 2) +
-               std::pow(pi._y - ac._center_of_mass_y, 2);
+      dx = pi._x - ac._center_of_mass_x;
+      dy = pi._y - ac._center_of_mass_y;
+      distance_sq = std::pow(dx, 2) + std::pow(dy, 2);
+
+      force = G * this->_particles[i]._m * ac._mass;
+      force /= distance_sq;
+
+      distance_sqrt = std::sqrt(distance_sq);
+      force_x += force * (dx / distance_sqrt);
+      force_y += force * (dy / distance_sqrt);
     }
 
-    // TODO calculate new acceleration, velocity, position
+    // calculate new acceleration, velocity, position
+    new_particle = Particle(pi._m);
 
-    // TODO create new particle with new acc, vel, pos and add it to this Cell's
-    // temp particles, or another cell if it has changed
+    ax = force_x / pi._m;
+    ay = force_y / pi._m;
+
+    new_particle._vx = pi._vx + ax * DELTAT;
+    new_particle._vy = pi._vy + ay * DELTAT;
+
+    new_particle._x = pi._x + pi._vx * DELTAT + 0.5 * ax * std::pow(DELTAT, 2);
+    new_particle._y = pi._y + pi._vy * DELTAT + 0.5 * ay * std::pow(DELTAT, 2);
+
+    new_particles.push_back(new_particle);
   }
+
+  return new_particles;
 }
 
 void Cell::finish_update() {
   this->_particles = this->_temp_particles;
-  this->_remove_collided();
   this->_update_mass();
   this->_update_center_of_mass();
 }

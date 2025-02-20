@@ -8,6 +8,7 @@ public:
   bool _collided;
 
   Particle();
+  Particle(double m);
   Particle(double x, double y, double vx, double vy, double m);
 };
 
