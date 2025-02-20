@@ -6,13 +6,15 @@
 
 class Grid {
 private:
+  long _side, _ncside;
 
 public:
   std::vector<Cell> _cells;
 
-  Grid();
+  Grid(long side, long ncside);
 
   void add_cell(Cell c);
+  std::vector<long> get_adjacent_cells(long ci);
   void update_cells();
 };
 

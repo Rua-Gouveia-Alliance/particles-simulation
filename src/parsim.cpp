@@ -59,7 +59,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
 }
 
 Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
-  Grid grid;
+  Grid grid(side, ncside );
   double cell_size = side / ncside;
 
   // create cells
