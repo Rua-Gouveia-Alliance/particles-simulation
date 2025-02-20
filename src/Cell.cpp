@@ -59,6 +59,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
     // calculate resulting force for particles inside same cell
     for (long long j = 0; j < this->_particles.size(); j++) {
+      // j= i + 1 //if we change to this we need to apply the force in opposite directions. 
       if (i == j)
         continue;
 
