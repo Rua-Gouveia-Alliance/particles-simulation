@@ -5,18 +5,21 @@ Grid::Grid(long side, long ncside) : _side(side), _ncside(ncside) {}
 
 void Grid::_add_particle_to_cell(Particle &p) {
   double cell_size = this->_side / this->_ncside;
-  long cell_x = static_cast<long>(p._x / cell_size);
-  long cell_y = static_cast<long>(p._y / cell_size);
+  long cell_x = static_cast<long>(p._x / cell_size) % this->_ncside;
+  long cell_y = static_cast<long>(p._y / cell_size) % this->_ncside;
+
+  if (cell_x < 0)
+    cell_x += this->_ncside;
+  if (cell_y < 0)
+    cell_y += this->_ncside;
 
   long cell_idx = cell_x + cell_y * this->_ncside;
-  // TODO wrap around
   this->_cells[cell_idx].add_particle(p);
 }
 
 void Grid::add_cell(Cell &c) { this->_cells.push_back(c); }
 
 std::vector<long> Grid::get_adjacent_cells(long ci) {
-  // TODO wrap around
   std::vector<long> adjacent;
   long cx = ci % this->_ncside;
   long cy = ci / this->_ncside;
@@ -26,13 +29,11 @@ std::vector<long> Grid::get_adjacent_cells(long ci) {
       if (ay == 0 && ax == 0)
         continue;
 
-      long nx = cx + ax;
-      long ny = cy + ay;
+      long nx = (cx + ax + this->_ncside) % this->_ncside;
+      long ny = (cy + ay + this->_ncside) % this->_ncside;
 
-      if (ny >= 0 && ny < this->_ncside && nx >= 0 && nx < this->_ncside) {
-        long idx = nx + ny * this->_ncside;
-        adjacent.push_back(idx);
-      }
+      long idx = nx + ny * this->_ncside;
+      adjacent.push_back(idx);
     }
   }
 
