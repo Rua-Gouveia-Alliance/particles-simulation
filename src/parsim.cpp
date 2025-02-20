@@ -53,6 +53,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
 
     par[i]._m = rnd01() * 0.01 * (ncside * ncside) / n_part / G * EPSILON2;
   }
+  par[0]._first_particle = true;
 }
 
 Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
@@ -94,10 +95,10 @@ void simulation(Grid &grid, long long time_steps) {
 }
 
 void print_result(Grid &g) {
-  // TODO this should print coords of particle 0 (two real values using three
-  // decimal digits) in the first line, and the number of particles that
-  // collided in the second line
-  g.print_cells();
+  g.print_cells(); // debug
+  Particle pf = g.get_first_particle();
+  std::cout << pf._x << " " << pf._y << std::endl;
+  // std::cout << g.get_collisions() << std::endl;
 }
 
 int main(int argc, char *argv[]) {

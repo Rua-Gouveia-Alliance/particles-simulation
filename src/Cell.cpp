@@ -1,4 +1,5 @@
 #include "Cell.hpp"
+#include "Particle.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -59,7 +60,10 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
     // calculate resulting force for particles inside same cell
     for (long long j = 0; j < this->_particles.size(); j++) {
-      // j= i + 1 //if we change to this we need to apply the force in opposite directions. 
+      // TODO nao percebi o comentario \/
+      // j= i + 1 //if we change to this we need to apply the force in opposite
+      // directions.
+
       if (i == j)
         continue;
 
@@ -115,6 +119,9 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
     new_particle._x = pi._x + pi._vx * DELTAT + 0.5 * ax * std::pow(DELTAT, 2);
     new_particle._y = pi._y + pi._vy * DELTAT + 0.5 * ay * std::pow(DELTAT, 2);
 
+    if (pi._first_particle)
+      new_particle._first_particle = true;
+
     new_particles.push_back(new_particle);
   }
 
@@ -137,3 +144,4 @@ void Cell::print_particles() {
 double Cell::get_center_of_mass_x() { return this->_center_of_mass_x; }
 double Cell::get_center_of_mass_y() { return this->_center_of_mass_y; }
 double Cell::get_cell_mass() { return this->_mass; }
+std::vector<Particle>& Cell::get_particles() { return this->_particles; }

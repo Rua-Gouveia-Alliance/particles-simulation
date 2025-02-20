@@ -31,6 +31,7 @@ public:
   double get_center_of_mass_x();
   double get_center_of_mass_y();
   double get_cell_mass();
+  std::vector<Particle>& get_particles();
 };
 
 #endif

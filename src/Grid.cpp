@@ -72,3 +72,14 @@ void Grid::print_cells() {
     std::cout << std::endl;
   }
 }
+
+Particle Grid::get_first_particle() {
+  // TODO this is not efficient at all, maybe improve
+  for (auto &c : this->_cells) {
+    for (auto &p : c.get_particles()) {
+      if (p._first_particle)
+        return p;
+    }
+  }
+  return Particle();
+}

@@ -2,6 +2,7 @@
 #define __GRID_HPP__
 
 #include "Cell.hpp"
+#include "Particle.hpp"
 #include <vector>
 
 class Grid {
@@ -20,6 +21,7 @@ public:
   std::vector<long> get_adjacent_cells(long ci);
   void update_cells();
   void print_cells();
+  Particle get_first_particle();
 };
 
 #endif
