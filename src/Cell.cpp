@@ -66,16 +66,15 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
       dx = pi._x - this->_particles[j]._x;
       dy = pi._y - this->_particles[j]._y;
-      distance_sq = std::pow(dx, 2) + std::pow(dy, 2);
+      //distance_sq = std::pow(dx, 2) + std::pow(dy, 2);
+      distance_sq = dx * dx + dy * dy;
 
-      // TODO can be improved, only check if A,B and B,A collided once
       if (distance_sq < EPSILON2) {
         collided = true;
         this->_collisions++;
         break;
       }
 
-      // TODO can be improved, only calculate the force for A,B and B,A once
       force = G * this->_particles[i]._m * this->_particles[j]._m;
       force /= distance_sq;
 
@@ -101,7 +100,9 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
       dx = pi._x - ac._center_of_mass_x;
       dy = pi._y - ac._center_of_mass_y;
-      distance_sq = std::pow(dx, 2) + std::pow(dy, 2);
+
+      //distance_sq = std::pow(dx, 2) + std::pow(dy, 2);
+      distance_sq = dx * dx + dy * dy;
 
       force = G * this->_particles[i]._m * ac._mass;
       force /= distance_sq;
@@ -120,8 +121,12 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
     new_particle._vx = pi._vx + ax * DELTAT;
     new_particle._vy = pi._vy + ay * DELTAT;
 
-    new_particle._x = pi._x + pi._vx * DELTAT + 0.5 * ax * std::pow(DELTAT, 2);
-    new_particle._y = pi._y + pi._vy * DELTAT + 0.5 * ay * std::pow(DELTAT, 2);
+    //new_particle._x = pi._x + pi._vx * DELTAT + 0.5 * ax * std::pow(DELTAT, 2);
+    //new_particle._y = pi._y + pi._vy * DELTAT + 0.5 * ay * std::pow(DELTAT, 2);
+
+    new_particle._x = pi._x + pi._vx * DELTAT + 0.5 * ax * (DELTAT * DELTAT);
+    new_particle._y = pi._y + pi._vy * DELTAT + 0.5 * ay * (DELTAT * DELTAT);
+
 
     if (pi._first_particle)
       new_particle._first_particle = true;
