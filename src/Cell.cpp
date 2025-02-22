@@ -44,7 +44,9 @@ bool Cell::is_particle_inside(Particle &p) {
 std::vector<Particle>
 Cell::update_particles(std::vector<Cell> &adjacent_cells) {
   std::vector<Particle> new_particles;
-
+  //2 vectors of force to save and only calculate A->B and avoid B->A
+  std::vector<double> force_xx(this->_particles.size(), 0.0);
+  std::vector<double> force_yy(this->_particles.size(), 0.0);
   for (long long i = 0; i < this->_particles.size(); i++) {
     Particle &pi = this->_particles[i], new_particle;
     double force;
@@ -54,13 +56,13 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
     bool collided = false;
 
     // calculate resulting force for particles inside same cell
-    for (long long j = 0; j < this->_particles.size(); j++) {
+    for (long long j = i + 1; j < this->_particles.size(); j++) {
       // TODO nao percebi o comentario do arede \/
       // j= i + 1 //if we change to this we need to apply the force in opposite
       // directions.
 
-      if (i == j)
-        continue;
+      /*if (i == j)
+        continue;*/
 
       dx = pi._x - this->_particles[j]._x;
       dy = pi._y - this->_particles[j]._y;
@@ -80,6 +82,13 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       distance_sqrt = std::sqrt(distance_sq);
       force_x += force * (dx / distance_sqrt);
       force_y += force * (dy / distance_sqrt);
+
+      //TODO change this var name pls...
+      force_xx[i] += force_x;
+      force_xx[j] -= force_x;
+      //Apply sym force to par j
+      force_yy[i] += force_y;
+      force_yy[j] -= force_y;
     }
 
     if (collided)
@@ -98,15 +107,15 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       force /= distance_sq;
 
       distance_sqrt = std::sqrt(distance_sq);
-      force_x += force * (dx / distance_sqrt);
-      force_y += force * (dy / distance_sqrt);
+      force_xx[i] += force * (dx / distance_sqrt);
+      force_yy[i] += force * (dy / distance_sqrt);
     }
 
     // calculate new acceleration, velocity, position
     new_particle = Particle(pi._m);
 
-    ax = force_x / pi._m;
-    ay = force_y / pi._m;
+    ax = force_xx[i] / pi._m;
+    ay = force_yy[i] / pi._m;
 
     new_particle._vx = pi._vx + ax * DELTAT;
     new_particle._vy = pi._vy + ay * DELTAT;

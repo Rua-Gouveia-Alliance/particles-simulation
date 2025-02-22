@@ -100,7 +100,7 @@ void print_result(Grid &g) {
   fprintf(stdout, "%.3f %.3f\n", pf._x, pf._y);
 
   // divided by 2 because A,B and B,A are just one collision
-  std::cout << g.get_collisions() / 2 << std::endl;
+  std::cout << g.get_collisions() << std::endl;
 }
 
 int main(int argc, char *argv[]) {
