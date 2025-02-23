@@ -45,8 +45,8 @@ std::vector<Particle>
 Cell::update_particles(std::vector<Cell> &adjacent_cells) {
   std::vector<Particle> new_particles;
   //2 vectors of force to save and only calculate A->B and avoid B->A
-  //std::vector<double> force_xx(this->_particles.size(), 0.0);
-  //std::vector<double> force_yy(this->_particles.size(), 0.0);
+ /*std::vector<double> force_xx(this->_particles.size(), 0.0);
+  std::vector<double> force_yy(this->_particles.size(), 0.0);*/
   std::vector<std::pair<double, double>> forces(this->_particles.size(), {0.0, 0.0});
 
   for (long long i = 0; i < this->_particles.size(); i++) {
@@ -82,12 +82,10 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
       force_x += force * (dx * inv_distance_sqrt);
-      force_y += force * (dy / inv_distance_sqrt);
+      force_y += force * (dy * inv_distance_sqrt);
 
-      //TODO change this var name pls...
       forces[i].first += force_x;
       forces[j].first -= force_x;
-      //Apply sym force to par j
       forces[i].second += force_y;
       forces[j].second -= force_y;
     }
@@ -117,7 +115,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
     // calculate new acceleration, velocity, position
     new_particle = Particle(pi._m);
 
-    ax = forces[i].first / pi._m;
+    ax = forces[i].first  / pi._m;
     ay = forces[i].second / pi._m;
 
     new_particle._vx = pi._vx + ax * DELTAT;
