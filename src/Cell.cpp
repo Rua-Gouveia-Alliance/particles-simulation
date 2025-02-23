@@ -45,12 +45,14 @@ std::vector<Particle>
 Cell::update_particles(std::vector<Cell> &adjacent_cells) {
   std::vector<Particle> new_particles;
   //2 vectors of force to save and only calculate A->B and avoid B->A
-  std::vector<double> force_xx(this->_particles.size(), 0.0);
-  std::vector<double> force_yy(this->_particles.size(), 0.0);
+  //std::vector<double> force_xx(this->_particles.size(), 0.0);
+  //std::vector<double> force_yy(this->_particles.size(), 0.0);
+  std::vector<std::pair<double, double>> forces(this->_particles.size(), {0.0, 0.0});
+
   for (long long i = 0; i < this->_particles.size(); i++) {
     Particle &pi = this->_particles[i], new_particle;
     double force;
-    double dx, dy, distance_sq, distance_sqrt;
+    double dx, dy, distance_sq, distance_sqrt, inv_distance_sqrt;
     double force_x = 0.0, force_y = 0.0;
     double ax, ay;
     bool collided = false;
@@ -78,16 +80,16 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       force = G * this->_particles[i]._m * this->_particles[j]._m;
       force /= distance_sq;
 
-      distance_sqrt = std::sqrt(distance_sq);
-      force_x += force * (dx / distance_sqrt);
-      force_y += force * (dy / distance_sqrt);
+      inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
+      force_x += force * (dx * inv_distance_sqrt);
+      force_y += force * (dy / inv_distance_sqrt);
 
       //TODO change this var name pls...
-      force_xx[i] += force_x;
-      force_xx[j] -= force_x;
+      forces[i].first += force_x;
+      forces[j].first -= force_x;
       //Apply sym force to par j
-      force_yy[i] += force_y;
-      force_yy[j] -= force_y;
+      forces[i].second += force_y;
+      forces[j].second -= force_y;
     }
 
     if (collided)
@@ -107,16 +109,16 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       force = G * this->_particles[i]._m * ac._mass;
       force /= distance_sq;
 
-      distance_sqrt = std::sqrt(distance_sq);
-      force_xx[i] += force * (dx / distance_sqrt);
-      force_yy[i] += force * (dy / distance_sqrt);
+      inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
+      forces[i].first += force * (dx * inv_distance_sqrt);
+      forces[i].second += force * (dy * inv_distance_sqrt);
     }
 
     // calculate new acceleration, velocity, position
     new_particle = Particle(pi._m);
 
-    ax = force_xx[i] / pi._m;
-    ay = force_yy[i] / pi._m;
+    ax = forces[i].first / pi._m;
+    ay = forces[i].second / pi._m;
 
     new_particle._vx = pi._vx + ax * DELTAT;
     new_particle._vy = pi._vy + ay * DELTAT;
