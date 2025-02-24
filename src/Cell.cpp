@@ -56,7 +56,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
     double force_x = 0.0, force_y = 0.0;
     double ax, ay;
     bool collided = false;
-
+    double Gm_i = G * this->_particles[i]._m; 
     // calculate resulting force for particles inside same cell
     for (long long j = i + 1; j < this->_particles.size(); j++) {
       // TODO nao percebi o comentario do arede \/
@@ -77,7 +77,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
         break;
       }
 
-      force = G * this->_particles[i]._m * this->_particles[j]._m;
+      force = Gm_i * this->_particles[j]._m;
       force /= distance_sq;
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
@@ -104,7 +104,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       //distance_sq = std::pow(dx, 2) + std::pow(dy, 2);
       distance_sq = dx * dx + dy * dy;
 
-      force = G * this->_particles[i]._m * ac._mass;
+      force = Gm_i * ac._mass;
       force /= distance_sq;
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
