@@ -130,8 +130,8 @@ std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
     // calculate new acceleration, velocity, position
     new_particle = Particle(pi._m);
 
-    ax = forces[i].first / pi._m;
-    ay = forces[i].second / pi._m;
+    ax = -forces[i].first / pi._m;
+    ay = -forces[i].second / pi._m;
 
     new_particle._vx = pi._vx + ax * DELTAT;
     new_particle._vy = pi._vy + ay * DELTAT;
