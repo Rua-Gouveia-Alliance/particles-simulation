@@ -12,7 +12,6 @@ class Cell {
 private:
   std::vector<Particle> _particles;
   std::vector<Particle> _temp_particles;
-  double _x, _y, _side;
   double _center_of_mass_x, _center_of_mass_y, _mass;
 
   void _update_mass();
@@ -21,13 +20,13 @@ private:
 
 public:
   long _collisions = 0;
+  double _x, _y, _side;
 
   Cell(double x, double y, double side);
 
   void add_particle(Particle &p);
   bool is_particle_inside(Particle &p);
-  std::vector<Particle> update_particles(std::vector<Cell> &adjacent_cells,
-                                         double grid_side);
+  std::vector<Particle> update_particles(std::vector<Cell> &adjacent_cells);
   void finish_update();
   void print_particles();
 

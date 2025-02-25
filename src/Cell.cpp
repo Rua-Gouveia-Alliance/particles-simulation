@@ -83,8 +83,7 @@ bool Cell::is_particle_inside(Particle &p) {
          this->_y <= p._y && p._y <= this->_y + this->_side;
 }
 
-std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
-                                             double grid_side) {
+std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells) {
   Particle new_particle;
   std::vector<Particle> new_particles;
   std::vector<std::pair<double, double>> forces(this->_particles.size(),
@@ -93,7 +92,6 @@ std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
   double dx, dy, distance_sq, inv_distance_sqrt;
   double force_x, force_y;
   double ax, ay;
-  double adj_cm_x, adj_cm_y;
   double Gm_i;
 
   for (long long i = 0; i < this->_particles.size(); i++) {
@@ -124,27 +122,8 @@ std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
       if (ac._mass == 0)
         continue;
 
-      adj_cm_x = ac._center_of_mass_x;
-      adj_cm_y = ac._center_of_mass_y;
-
-      // TODO these calculations shouldnt be here, inefficient
-
-      // wrapping in x direction
-      if (adj_cm_x > this->_x + this->_side * 2) {
-        adj_cm_x -= grid_side;
-      } else if (adj_cm_x < this->_x - this->_side) {
-        adj_cm_x += grid_side;
-      }
-
-      // wrapping in y direction
-      if (adj_cm_y > this->_y + this->_side * 2) {
-        adj_cm_y -= grid_side;
-      } else if (adj_cm_y < this->_y - this->_side) {
-        adj_cm_y += grid_side;
-      }
-
-      dx = adj_cm_x - pi._x;
-      dy = adj_cm_y - pi._y;
+      dx = ac._center_of_mass_x - pi._x;
+      dy = ac._center_of_mass_y - pi._y;
       distance_sq = dx * dx + dy * dy;
 
       force = Gm_i * ac._mass;

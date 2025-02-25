@@ -42,19 +42,39 @@ std::vector<long> Grid::get_adjacent_cells(long ci) {
 
 void Grid::update_cells() {
   for (long i = 0; i < this->_cells.size(); i++) {
+    Cell &curr_cell = this->_cells[i];
+    double cell_side;
+
     std::vector<long> adjacent_idx = this->get_adjacent_cells(i);
     std::vector<Cell> adjacent_cells;
     for (long j : adjacent_idx) {
-      adjacent_cells.push_back(this->_cells[j]);
+      Cell new_cell = this->_cells[j];
+      cell_side = curr_cell._side;
+
+      // wrapping in x direction
+      if (new_cell._x > curr_cell._x + cell_side * 2) {
+        new_cell._x -= this->_side;
+      } else if (new_cell._x < curr_cell._x - cell_side) {
+        new_cell._x += this->_side;
+      }
+
+      // wrapping in y direction
+      if (new_cell._y > curr_cell._y + cell_side * 2) {
+        new_cell._y -= this->_side;
+      } else if (new_cell._y < curr_cell._y - cell_side) {
+        new_cell._y += this->_side;
+      }
+
+      adjacent_cells.push_back(new_cell);
     }
 
     std::vector<Particle> new_particles =
-        this->_cells[i].update_particles(adjacent_cells, this->_side);
+        curr_cell.update_particles(adjacent_cells);
 
     for (auto &p : new_particles) {
       // small optimization
-      if (this->_cells[i].is_particle_inside(p))
-        this->_cells[i].add_particle(p);
+      if (curr_cell.is_particle_inside(p))
+        curr_cell.add_particle(p);
       else
         this->_add_particle_to_cell(p);
     }
