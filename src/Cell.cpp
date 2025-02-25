@@ -1,8 +1,10 @@
 #include "Cell.hpp"
 #include "Particle.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <unordered_set>
 #include <vector>
 
 Cell::Cell(double x, double y, long side) : _x(x), _y(y), _side(side){};
@@ -44,6 +46,7 @@ bool Cell::is_particle_inside(Particle &p) {
 std::vector<Particle>
 Cell::update_particles(std::vector<Cell> &adjacent_cells) {
   std::vector<Particle> new_particles;
+  std::unordered_set<long long> collided;
 
   // 2 vectors of force to save and only calculate A->B and avoid B->A
   std::vector<std::pair<double, double>> forces(this->_particles.size(),
@@ -52,10 +55,9 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
   for (long long i = 0; i < this->_particles.size(); i++) {
     Particle &pi = this->_particles[i], new_particle;
     double force;
-    double dx, dy, distance_sq, distance_sqrt, inv_distance_sqrt;
-    double force_x = 0.0, force_y = 0.0;
+    double dx, dy, distance_sq, inv_distance_sqrt;
+    double force_x, force_y;
     double ax, ay;
-    bool collided = false;
     double Gm_i = G * this->_particles[i]._m;
 
     // calculate resulting force for particles inside same cell
@@ -66,17 +68,18 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       distance_sq = dx * dx + dy * dy;
 
       if (distance_sq < EPSILON2) {
-        collided = true;
         this->_collisions++;
-        break;
+        collided.insert(i);
+        collided.insert(j);
+        continue;
       }
 
       force = Gm_i * this->_particles[j]._m;
       force /= distance_sq;
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
-      force_x += force * (dx * inv_distance_sqrt);
-      force_y += force * (dy * inv_distance_sqrt);
+      force_x = force * (dx * inv_distance_sqrt);
+      force_y = force * (dy * inv_distance_sqrt);
 
       forces[i].first += force_x;
       forces[j].first -= force_x;
@@ -84,7 +87,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       forces[j].second -= force_y;
     }
 
-    if (collided)
+    if (std::find(collided.begin(), collided.end(), i) != collided.end())
       continue;
 
     // calculate resulting force for adjacent cells
