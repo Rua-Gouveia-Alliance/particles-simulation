@@ -64,8 +64,8 @@ std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
     // calculate resulting force for particles inside same cell
     for (long long j = i + 1; j < this->_particles.size(); j++) {
 
-      dx = pi._x - this->_particles[j]._x;
-      dy = pi._y - this->_particles[j]._y;
+      dx = this->_particles[j]._x - pi._x;
+      dy = this->_particles[j]._y - pi._y;
       distance_sq = dx * dx + dy * dy;
 
       if (distance_sq < EPSILON2) {
@@ -99,7 +99,7 @@ std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
       adj_cm_x = ac._center_of_mass_x;
       adj_cm_y = ac._center_of_mass_y;
 
-      // TODO i think there is some bug in these wrapping calculations
+      // TODO these calculations shouldnt be here, inefficient
 
       // wrapping in x direction
       if (adj_cm_x > this->_x + this->_side * 2) {
@@ -115,8 +115,8 @@ std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
         adj_cm_y += grid_side;
       }
 
-      dx = pi._x - adj_cm_x;
-      dy = pi._y - adj_cm_y;
+      dx = adj_cm_x - pi._x;
+      dy = adj_cm_y - pi._y;
       distance_sq = dx * dx + dy * dy;
 
       force = Gm_i * ac._mass;
@@ -130,8 +130,8 @@ std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
     // calculate new acceleration, velocity, position
     new_particle = Particle(pi._m);
 
-    ax = -forces[i].first / pi._m;
-    ay = -forces[i].second / pi._m;
+    ax = forces[i].first / pi._m;
+    ay = forces[i].second / pi._m;
 
     new_particle._vx = pi._vx + ax * DELTAT;
     new_particle._vy = pi._vy + ay * DELTAT;
