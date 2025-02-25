@@ -37,18 +37,16 @@ void Cell::_update_center_of_mass() {
 }
 
 void Cell::_check_collisions() {
-  // TODO this is not very efficient
-
   std::vector<Particle> final_particles;
   long long p_count = this->_particles.size();
+  std::vector<bool> collided(p_count, false);
   double dx, dy, distance_sq;
-  bool collided;
+  long long i;
 
-  for (long long i = 0; i < p_count; i++) {
+  for (i = 0; i < p_count; i++) {
     Particle &pi = this->_particles[i];
 
-    collided = false;
-    for (long long j = 0; j < p_count; j++) {
+    for (long long j = i + 1; j < p_count; j++) {
       if (i == j)
         continue;
 
@@ -66,12 +64,15 @@ void Cell::_check_collisions() {
         // std::cout << std::endl;
 
         this->_collisions++;
-        collided = true;
+        collided[i] = true;
+        collided[j] = true;
       }
     }
+  }
 
-    if (!collided)
-      final_particles.push_back(pi);
+  for (i = 0; i < p_count; i++) {
+    if (!collided[i])
+      final_particles.push_back(this->_particles[i]);
   }
 
   this->_particles = final_particles;
