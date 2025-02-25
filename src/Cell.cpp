@@ -59,10 +59,11 @@ void Cell::_check_collisions() {
       distance_sq = dx * dx + dy * dy;
 
       if (distance_sq < EPSILON2) {
-        std::cout << "COLLIDED!!!!!!!!!!!!!!!!!!!!" << std::endl;
-        pi.print_info();
-        pj.print_info();
-        std::cout << std::endl;
+        // debug
+        // std::cout << "COLLIDED" << std::endl;
+        // pi.print_info();
+        // pj.print_info();
+        // std::cout << std::endl;
 
         this->_collisions++;
         collided = true;

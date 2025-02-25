@@ -90,9 +90,9 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
 
 void simulation(Grid &grid, long long time_steps) {
   for (long long ll = 0; ll < time_steps; ll++) {
+    // std::cout << "Round " << ll << std::endl; // debug
     grid.update_cells();
-    std::cout << "Round " << ll << std::endl;
-    grid.print_cells();
+    // grid.print_cells(); // debug
   }
 }
 
@@ -101,6 +101,7 @@ void print_result(Grid &g) {
   Particle pf = g.get_first_particle();
   fprintf(stdout, "%.3f %.3f\n", pf._x, pf._y);
 
+// divided by 2 because A,B and B,A are just one collision
   std::cout << g.get_collisions() / 2 << std::endl;
 }
 
@@ -126,8 +127,8 @@ int main(int argc, char *argv[]) {
     Grid grid = init_grid(side, ncside, particles);
 
     // debug
-    std::cout << "INITIAL GRID" << std::endl;
-    grid.print_cells();
+    // std::cout << "INITIAL GRID" << std::endl;
+    // grid.print_cells();
 
     exec_time = -omp_get_wtime();
     simulation(grid, time_steps);
