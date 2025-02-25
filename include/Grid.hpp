@@ -15,7 +15,7 @@ private:
 public:
   std::vector<Cell> _cells;
 
-  Grid(long side, long ncside);
+  Grid(double side, long ncside);
 
   void add_cell(Cell &c);
   std::vector<long> get_adjacent_cells(long ci);

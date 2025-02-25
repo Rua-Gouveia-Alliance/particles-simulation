@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
-Cell::Cell(double x, double y, long side) : _x(x), _y(y), _side(side){};
+Cell::Cell(double x, double y, double side) : _x(x), _y(y), _side(side){};
 
 void Cell::_update_mass() {
   double total = 0;

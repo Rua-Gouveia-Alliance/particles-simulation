@@ -1,7 +1,7 @@
 #include "Grid.hpp"
 #include <iostream>
 
-Grid::Grid(long side, long ncside) : _side(side), _ncside(ncside) {}
+Grid::Grid(double side, long ncside) : _side(side), _ncside(ncside) {}
 
 void Grid::_add_particle_to_cell(Particle &p) {
   double cell_size = this->_side / this->_ncside;
