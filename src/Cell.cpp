@@ -68,9 +68,7 @@ void Cell::_check_collisions() {
         collided[j] = true;
       }
     }
-  }
 
-  for (i = 0; i < p_count; i++) {
     if (!collided[i])
       final_particles.push_back(this->_particles[i]);
   }

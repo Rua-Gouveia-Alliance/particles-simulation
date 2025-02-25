@@ -101,7 +101,6 @@ void print_result(Grid &g) {
   Particle pf = g.get_first_particle();
   fprintf(stdout, "%.3f %.3f\n", pf._x, pf._y);
 
-// divided by 2 because A,B and B,A are just one collision
   std::cout << g.get_collisions() << std::endl;
 }
 
