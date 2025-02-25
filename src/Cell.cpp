@@ -137,6 +137,9 @@ void Cell::print_particles() {
   for (auto &p : this->_particles) {
     p.print_info();
   }
+  std::cout << "Center of Mass: " << this->_center_of_mass_x << ", "
+            << this->get_center_of_mass_y() << std::endl;
+  std::cout << "Mass: " << this->_mass << std::endl;
 }
 
 double Cell::get_center_of_mass_x() { return this->_center_of_mass_x; }

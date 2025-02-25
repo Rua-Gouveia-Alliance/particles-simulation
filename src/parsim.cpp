@@ -90,7 +90,9 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
 
 void simulation(Grid &grid, long long time_steps) {
   for (long long ll = 0; ll < time_steps; ll++) {
+    std::cout << "Round: " << ll << std::endl;
     grid.update_cells();
+    grid.print_cells();
   }
 }
 
@@ -124,8 +126,8 @@ int main(int argc, char *argv[]) {
     Grid grid = init_grid(side, ncside, particles);
 
     // debug
-    // std::cout << "INITIAL GRID" << std::endl;
-    // grid.print_cells();
+    std::cout << "INITIAL GRID" << std::endl;
+    grid.print_cells();
 
     exec_time = -omp_get_wtime();
     simulation(grid, time_steps);
