@@ -52,7 +52,7 @@ void Grid::update_cells() {
         this->_cells[i].update_particles(adjacent_cells, this->_side);
 
     for (auto &p : new_particles) {
-      // TODO i dont know if this check improves performance or if its worse
+      // small optimization
       if (this->_cells[i].is_particle_inside(p))
         this->_cells[i].add_particle(p);
       else
