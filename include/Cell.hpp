@@ -17,6 +17,7 @@ private:
 
   void _update_mass();
   void _update_center_of_mass();
+  void _check_collisions();
 
 public:
   long _collisions = 0;

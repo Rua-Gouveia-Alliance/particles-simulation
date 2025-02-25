@@ -101,7 +101,7 @@ void print_result(Grid &g) {
   Particle pf = g.get_first_particle();
   fprintf(stdout, "%.3f %.3f\n", pf._x, pf._y);
 
-  std::cout << g.get_collisions() << std::endl;
+  std::cout << g.get_collisions() / 2 << std::endl;
 }
 
 int main(int argc, char *argv[]) {
