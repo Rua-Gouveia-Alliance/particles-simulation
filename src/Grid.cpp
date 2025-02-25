@@ -49,7 +49,7 @@ void Grid::update_cells() {
     }
 
     std::vector<Particle> new_particles =
-        this->_cells[i].update_particles(adjacent_cells);
+        this->_cells[i].update_particles(adjacent_cells, this->_side);
 
     for (auto &p : new_particles) {
       // TODO i dont know if this check improves performance or if its worse

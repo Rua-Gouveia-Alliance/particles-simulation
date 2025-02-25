@@ -91,6 +91,8 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
 void simulation(Grid &grid, long long time_steps) {
   for (long long ll = 0; ll < time_steps; ll++) {
     grid.update_cells();
+    std::cout << "Round " << ll << std::endl;
+    grid.print_cells();
   }
 }
 

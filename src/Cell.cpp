@@ -43,8 +43,8 @@ bool Cell::is_particle_inside(Particle &p) {
          this->_y <= p._y && p._y <= this->_y + this->_side;
 }
 
-std::vector<Particle>
-Cell::update_particles(std::vector<Cell> &adjacent_cells) {
+std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells,
+                                             double grid_side) {
   std::vector<Particle> new_particles;
   std::unordered_set<long long> collided;
 
@@ -58,6 +58,7 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
     double dx, dy, distance_sq, inv_distance_sqrt;
     double force_x, force_y;
     double ax, ay;
+    double adj_cm_x, adj_cm_y;
     double Gm_i = G * this->_particles[i]._m;
 
     // calculate resulting force for particles inside same cell
@@ -95,9 +96,27 @@ Cell::update_particles(std::vector<Cell> &adjacent_cells) {
       if (ac._mass == 0)
         continue;
 
-      dx = pi._x - ac._center_of_mass_x;
-      dy = pi._y - ac._center_of_mass_y;
+      adj_cm_x = ac._center_of_mass_x;
+      adj_cm_y = ac._center_of_mass_y;
 
+      // TODO i think there is some bug in these wrapping calculations
+
+      // wrapping in x direction
+      if (adj_cm_x > this->_x + this->_side * 2) {
+        adj_cm_x -= grid_side;
+      } else if (adj_cm_x < this->_x - this->_side) {
+        adj_cm_x += grid_side;
+      }
+
+      // wrapping in y direction
+      if (adj_cm_y > this->_y + this->_side * 2) {
+        adj_cm_y -= grid_side;
+      } else if (adj_cm_y < this->_y - this->_side) {
+        adj_cm_y += grid_side;
+      }
+
+      dx = pi._x - adj_cm_x;
+      dy = pi._y - adj_cm_y;
       distance_sq = dx * dx + dy * dy;
 
       force = Gm_i * ac._mass;
