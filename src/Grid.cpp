@@ -4,7 +4,7 @@
 Grid::Grid(double side, long ncside) : _side(side), _ncside(ncside) {}
 
 void Grid::_add_particle_to_cell(Particle &p) {
-  double cell_size = _side / this->_ncside;
+  double cell_size = _side / _ncside;
   long cell_x = static_cast<long>(p._x / cell_size) % _ncside;
   long cell_y = static_cast<long>(p._y / cell_size) % _ncside;
 
@@ -29,8 +29,8 @@ std::vector<long> Grid::get_adjacent_cells(long ci) {
       if (ay == 0 && ax == 0)
         continue;
 
-      long nx = (cx + ax + _ncside) % this->_ncside;
-      long ny = (cy + ay + _ncside) % this->_ncside;
+      long nx = (cx + ax + _ncside) % _ncside;
+      long ny = (cy + ay + _ncside) % _ncside;
 
       long idx = nx + ny * _ncside;
       adjacent.push_back(idx);
