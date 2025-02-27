@@ -52,17 +52,17 @@ void Grid::update_cells() {
       cell_side = curr_cell._side;
 
       // wrapping in x direction
-      if (new_cell._x > curr_cell._x + cell_side * 2) {
-        new_cell._x -= this->_side;
+      if (new_cell._x >= curr_cell._x + cell_side * 2) {
+        new_cell._center_of_mass_x -= this->_side;
       } else if (new_cell._x < curr_cell._x - cell_side) {
-        new_cell._x += this->_side;
+        new_cell._center_of_mass_x += this->_side;
       }
 
       // wrapping in y direction
-      if (new_cell._y > curr_cell._y + cell_side * 2) {
-        new_cell._y -= this->_side;
+      if (new_cell._y >= curr_cell._y + cell_side * 2) {
+        new_cell._center_of_mass_y -= this->_side;
       } else if (new_cell._y < curr_cell._y - cell_side) {
-        new_cell._y += this->_side;
+        new_cell._center_of_mass_y += this->_side;
       }
 
       adjacent_cells.push_back(new_cell);

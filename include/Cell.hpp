@@ -12,7 +12,6 @@ class Cell {
 private:
   std::vector<Particle> _particles;
   std::vector<Particle> _temp_particles;
-  double _center_of_mass_x, _center_of_mass_y, _mass;
 
   void _update_mass();
   void _update_center_of_mass();
@@ -21,6 +20,7 @@ private:
 public:
   long _collisions = 0;
   double _x, _y, _side;
+  double _center_of_mass_x, _center_of_mass_y, _mass;
 
   Cell(double x, double y, double side);
 
