@@ -83,7 +83,8 @@ bool Cell::is_particle_inside(Particle &p) {
          this->_y <= p._y && p._y <= this->_y + this->_side;
 }
 
-std::vector<Particle> Cell::update_particles(std::vector<Cell> &adjacent_cells) {
+std::vector<Particle>
+Cell::update_particles(std::vector<Cell> &adjacent_cells) {
   Particle new_particle;
   std::vector<Particle> new_particles;
   std::vector<std::pair<double, double>> forces(this->_particles.size(),
