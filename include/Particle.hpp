@@ -11,7 +11,7 @@ public:
   Particle(double m);
   Particle(double x, double y, double vx, double vy, double m);
 
-  void print_info();
+  void print_info() const;
 };
 
 #endif

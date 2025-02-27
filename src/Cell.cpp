@@ -11,46 +11,46 @@ Cell::Cell(double x, double y, double side) : _x(x), _y(y), _side(side){};
 
 void Cell::_update_mass() {
   double total = 0;
-  for (Particle &p : this->_particles) {
+  for (const auto &p : _particles) {
     total += p._m;
   }
-  this->_mass = total;
+  _mass = total;
 }
 
 void Cell::_update_center_of_mass() {
   double x_res = 0;
   double y_res = 0;
 
-  if (this->_mass == 0) {
-    this->_center_of_mass_x = -1;
-    this->_center_of_mass_y = -1;
+  if (_mass == 0) {
+    _center_of_mass_x = -1;
+    _center_of_mass_y = -1;
     return;
   }
 
-  for (Particle &p : this->_particles) {
+  for (const auto &p : _particles) {
     x_res += p._m * p._x;
     y_res += p._m * p._y;
   }
 
-  this->_center_of_mass_x = x_res / this->_mass;
-  this->_center_of_mass_y = y_res / this->_mass;
+  _center_of_mass_x = x_res / _mass;
+  _center_of_mass_y = y_res / _mass;
 }
 
 void Cell::_check_collisions() {
   std::vector<Particle> final_particles;
-  long long p_count = this->_particles.size();
+  long long p_count = _particles.size();
   std::vector<bool> collided(p_count, false);
   double dx, dy, distance_sq;
   long long i;
 
   for (i = 0; i < p_count; i++) {
-    Particle &pi = this->_particles[i];
+    const Particle &pi = _particles[i];
 
     for (long long j = i + 1; j < p_count; j++) {
       if (i == j)
         continue;
 
-      Particle &pj = this->_particles[j];
+      const Particle &pj = _particles[j];
 
       dx = pi._x - pj._x;
       dy = pi._y - pj._y;
@@ -63,49 +63,47 @@ void Cell::_check_collisions() {
         // pj.print_info();
         // std::cout << std::endl;
 
-        this->_collisions++;
+        _collisions++;
         collided[i] = true;
         collided[j] = true;
       }
     }
 
     if (!collided[i])
-      final_particles.push_back(this->_particles[i]);
+      final_particles.push_back(_particles[i]);
   }
 
-  this->_particles = final_particles;
+  _particles = final_particles;
 }
 
-void Cell::add_particle(Particle &p) { this->_temp_particles.push_back(p); }
+void Cell::add_particle(Particle &p) { _temp_particles.push_back(p); }
 
 bool Cell::is_particle_inside(Particle &p) {
-  return this->_x <= p._x && p._x <= this->_x + this->_side &&
-         this->_y <= p._y && p._y <= this->_y + this->_side;
+  return _x <= p._x && p._x <= _x + _side && _y <= p._y && p._y <= _y + _side;
 }
 
 std::vector<Particle>
 Cell::update_particles(const std::vector<Cell> &adjacent_cells) {
   Particle new_particle;
   std::vector<Particle> new_particles;
-  std::vector<std::pair<double, double>> forces(this->_particles.size(),
-                                                {0.0, 0.0});
+  std::vector<std::pair<double, double>> forces(_particles.size(), {0.0, 0.0});
   double force;
   double dx, dy, distance_sq, inv_distance_sqrt;
   double force_x, force_y;
   double ax, ay;
   double Gm_i;
 
-  for (long long i = 0; i < this->_particles.size(); i++) {
-    Particle &pi = this->_particles[i];
-    Gm_i = G * this->_particles[i]._m;
+  for (long long i = 0; i < _particles.size(); i++) {
+    const Particle &pi = _particles[i];
+    Gm_i = G * _particles[i]._m;
 
     // calculate resulting force for particles inside same cell
-    for (long long j = i + 1; j < this->_particles.size(); j++) {
-      dx = this->_particles[j]._x - pi._x;
-      dy = this->_particles[j]._y - pi._y;
+    for (long long j = i + 1; j < _particles.size(); j++) {
+      dx = _particles[j]._x - pi._x;
+      dy = _particles[j]._y - pi._y;
       distance_sq = dx * dx + dy * dy;
 
-      force = Gm_i * this->_particles[j]._m;
+      force = Gm_i * _particles[j]._m;
       force /= distance_sq;
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
@@ -157,23 +155,23 @@ Cell::update_particles(const std::vector<Cell> &adjacent_cells) {
 }
 
 void Cell::finish_update() {
-  this->_particles = this->_temp_particles;
-  this->_temp_particles = std::vector<Particle>();
-  this->_check_collisions();
-  this->_update_mass();
-  this->_update_center_of_mass();
+  _particles = _temp_particles;
+  _temp_particles = std::vector<Particle>();
+  _check_collisions();
+  _update_mass();
+  _update_center_of_mass();
 }
 
 void Cell::print_particles() {
-  for (auto &p : this->_particles) {
+  for (const auto &p : _particles) {
     p.print_info();
   }
-  std::cout << "Center of Mass: " << this->_center_of_mass_x << ", "
-            << this->get_center_of_mass_y() << std::endl;
-  std::cout << "Mass: " << this->_mass << std::endl;
+  std::cout << "Center of Mass: " << _center_of_mass_x << ", "
+            << get_center_of_mass_y() << std::endl;
+  std::cout << "Mass: " << _mass << std::endl;
 }
 
-double Cell::get_center_of_mass_x() { return this->_center_of_mass_x; }
-double Cell::get_center_of_mass_y() { return this->_center_of_mass_y; }
-double Cell::get_cell_mass() { return this->_mass; }
-std::vector<Particle> &Cell::get_particles() { return this->_particles; }
+double Cell::get_center_of_mass_x() { return _center_of_mass_x; }
+double Cell::get_center_of_mass_y() { return _center_of_mass_y; }
+double Cell::get_cell_mass() { return _mass; }
+std::vector<Particle> &Cell::get_particles() { return _particles; }
