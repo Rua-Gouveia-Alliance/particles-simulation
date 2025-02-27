@@ -45,7 +45,7 @@ void Grid::update_cells() {
     Cell &curr_cell = this->_cells[i];
     double cell_side;
 
-    std::vector<long> adjacent_idx = this->get_adjacent_cells(i);
+    const std::vector<long> &adjacent_idx = this->get_adjacent_cells(i);
     std::vector<Cell> adjacent_cells;
     for (long j : adjacent_idx) {
       Cell new_cell = this->_cells[j];
