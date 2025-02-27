@@ -122,14 +122,14 @@ int main(int argc, char *argv[]) {
     long long time_steps = std::stoll(argv[5]);
 
     init_particles(seed, side, ncside, n_part, particles);
-
-    Grid grid = init_grid(side, ncside, particles);
-
+  
     // debug
     // std::cout << "INITIAL GRID" << std::endl;
     // grid.print_cells();
 
     exec_time = -omp_get_wtime();
+
+    Grid grid = init_grid(side, ncside, particles);
     simulation(grid, time_steps);
     exec_time += omp_get_wtime();
 
