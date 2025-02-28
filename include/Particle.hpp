@@ -4,8 +4,8 @@
 class Particle {
 private:
 public:
-  double _x, _y, _vx, _vy, _m;
-  bool _first_particle;
+  double x, y, vx, vy, m;
+  bool first_particle;
 
   Particle();
   Particle(double m);

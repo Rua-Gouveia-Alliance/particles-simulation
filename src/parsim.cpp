@@ -44,14 +44,14 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par.resize(n_part);
 
   for (i = 0; i < n_part; i++) {
-    par[i]._x = rnd01() * side;
-    par[i]._y = rnd01() * side;
-    par[i]._vx = (rnd01() - 0.5) * side / ncside / 5.0;
-    par[i]._vy = (rnd01() - 0.5) * side / ncside / 5.0;
+    par[i].x = rnd01() * side;
+    par[i].y = rnd01() * side;
+    par[i].vx = (rnd01() - 0.5) * side / ncside / 5.0;
+    par[i].vy = (rnd01() - 0.5) * side / ncside / 5.0;
 
-    par[i]._m = rnd01() * 0.01 * (ncside * ncside) / n_part / G * EPSILON2;
+    par[i].m = rnd01() * 0.01 * (ncside * ncside) / n_part / G * EPSILON2;
   }
-  par[0]._first_particle = true;
+  par[0].first_particle = true;
 }
 
 Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
@@ -71,8 +71,8 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
 
   // assign particles to corresponding cells
   for (auto &p : pv) {
-    long cell_x = static_cast<long>(p._x / cell_size);
-    long cell_y = static_cast<long>(p._y / cell_size);
+    long cell_x = static_cast<long>(p.x / cell_size);
+    long cell_y = static_cast<long>(p.y / cell_size);
 
     long cell_idx = cell_x + cell_y * ncside;
     grid._cells[cell_idx].add_particle(p);
@@ -88,16 +88,13 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
 
 void simulation(Grid &grid, long long time_steps) {
   for (long long ll = 0; ll < time_steps; ll++) {
-    // std::cout << "Round " << ll << std::endl; // debug
     grid.update_cells();
-    // grid.print_cells(); // debug
   }
 }
 
 void print_result(Grid &g) {
-  // g.print_cells(); // debug
   Particle pf = g.get_first_particle();
-  fprintf(stdout, "%.3f %.3f\n", pf._x, pf._y);
+  fprintf(stdout, "%.3f %.3f\n", pf.x, pf.y);
 
   std::cout << g.get_collisions() << std::endl;
 }
@@ -120,10 +117,6 @@ int main(int argc, char *argv[]) {
     long long time_steps = std::stoll(argv[5]);
 
     init_particles(seed, side, ncside, n_part, particles);
-
-    // debug
-    // std::cout << "INITIAL GRID" << std::endl;
-    // grid.print_cells();
 
     exec_time = -omp_get_wtime();
     Grid grid = init_grid(side, ncside, particles);

@@ -18,9 +18,9 @@ private:
   void _check_collisions();
 
 public:
-  long _collisions = 0;
-  double _x, _y, _side;
-  double _center_of_mass_x, _center_of_mass_y, _mass;
+  long collisions = 0;
+  double x, y, side;
+  double center_of_mass_x, center_of_mass_y, mass;
 
   Cell(double x, double y, double side);
 
@@ -30,9 +30,6 @@ public:
   void finish_update();
   void print_particles() const;
 
-  double get_center_of_mass_x() const;
-  double get_center_of_mass_y() const;
-  double get_cell_mass() const;
   const std::vector<Particle> &get_particles();
 };
 
