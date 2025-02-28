@@ -25,7 +25,6 @@ public:
   Cell(double x, double y, double side);
 
   void add_particle(Particle &p);
-  bool is_particle_inside(const Particle &p);
   std::vector<Particle>
   update_particles(const std::vector<Cell> &adjacent_cells);
   void finish_update();

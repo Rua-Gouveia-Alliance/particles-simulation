@@ -5,14 +5,28 @@ Grid::Grid(double side, long ncside)
     : _side(side), _ncside(ncside), _first_particle(_default_first_particle) {}
 
 void Grid::_add_particle_to_cell(Particle &p) {
+  double temp_px, temp_py;
+
+  // wrap particle around
+  do {
+    temp_px = p._x;
+    temp_py = p._y;
+
+    if (p._x < 0)
+      p._x += _side;
+    else if (p._x >= _side)
+      p._x -= _side;
+
+    if (p._y < 0)
+      p._y += _side;
+    else if (p._y >= _side)
+      p._y -= _side;
+  } while (temp_px != p._x && temp_py != p._y);
+
+  // calculate cell index
   double cell_size = _side / _ncside;
   long cell_x = static_cast<long>(p._x / cell_size) % _ncside;
   long cell_y = static_cast<long>(p._y / cell_size) % _ncside;
-
-  if (cell_x < 0)
-    cell_x += _ncside;
-  if (cell_y < 0)
-    cell_y += _ncside;
 
   long cell_idx = cell_x + cell_y * _ncside;
   _cells[cell_idx].add_particle(p);
@@ -75,11 +89,8 @@ void Grid::update_cells() {
     for (auto &p : new_particles) {
       if (p._first_particle)
         _first_particle = p;
-      // small optimization
-      if (curr_cell.is_particle_inside(p))
-        curr_cell.add_particle(p);
-      else
-        _add_particle_to_cell(p);
+
+      _add_particle_to_cell(p);
     }
   }
 

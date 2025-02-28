@@ -78,10 +78,6 @@ void Cell::_check_collisions() {
 
 void Cell::add_particle(Particle &p) { _temp_particles.push_back(p); }
 
-bool Cell::is_particle_inside(const Particle &p) {
-  return _x <= p._x && p._x <= _x + _side && _y <= p._y && p._y <= _y + _side;
-}
-
 std::vector<Particle>
 Cell::update_particles(const std::vector<Cell> &adjacent_cells) {
   Particle new_particle;
