@@ -21,7 +21,7 @@ void Grid::_add_particle_to_cell(Particle &p) {
       p._y += _side;
     else if (p._y >= _side)
       p._y -= _side;
-  } while (temp_px != p._x && temp_py != p._y);
+  } while (temp_px != p._x || temp_py != p._y);
 
   // calculate cell index
   double cell_size = _side / _ncside;
