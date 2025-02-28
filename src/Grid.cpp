@@ -1,7 +1,8 @@
 #include "Grid.hpp"
 #include <iostream>
 
-Grid::Grid(double side, long ncside) : _side(side), _ncside(ncside) {}
+Grid::Grid(double side, long ncside)
+    : _side(side), _ncside(ncside), _first_particle(_default_first_particle) {}
 
 void Grid::_add_particle_to_cell(Particle &p) {
   double cell_size = _side / _ncside;
@@ -72,6 +73,8 @@ void Grid::update_cells() {
         curr_cell.update_particles(adjacent_cells);
 
     for (auto &p : new_particles) {
+      if (p._first_particle)
+        _first_particle = p;
       // small optimization
       if (curr_cell.is_particle_inside(p))
         curr_cell.add_particle(p);
@@ -85,7 +88,7 @@ void Grid::update_cells() {
   }
 }
 
-void Grid::print_cells() {
+void Grid::print_cells() const {
   for (long i = 0; i < _cells.size(); i++) {
     std::cout << "Cell " << i << std::endl;
     _cells[i].print_particles();
@@ -93,20 +96,11 @@ void Grid::print_cells() {
   }
 }
 
-Particle Grid::get_first_particle() {
-  // TODO this is not efficient at all, maybe improve
-  for (auto &c : _cells) {
-    for (auto &p : c.get_particles()) {
-      if (p._first_particle)
-        return p;
-    }
-  }
-  return Particle();
-}
+Particle Grid::get_first_particle() const { return _first_particle; }
 
 long Grid::get_collisions() {
   long total = 0;
-  for (auto &c : _cells) {
+  for (const auto &c : _cells) {
     total += c._collisions;
   }
   return total;

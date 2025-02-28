@@ -78,7 +78,7 @@ void Cell::_check_collisions() {
 
 void Cell::add_particle(Particle &p) { _temp_particles.push_back(p); }
 
-bool Cell::is_particle_inside(Particle &p) {
+bool Cell::is_particle_inside(const Particle &p) {
   return _x <= p._x && p._x <= _x + _side && _y <= p._y && p._y <= _y + _side;
 }
 
@@ -117,7 +117,7 @@ Cell::update_particles(const std::vector<Cell> &adjacent_cells) {
     }
 
     // calculate resulting force for adjacent cells
-    for (auto &ac : adjacent_cells) {
+    for (const auto &ac : adjacent_cells) {
       if (ac._mass == 0)
         continue;
 
@@ -162,7 +162,7 @@ void Cell::finish_update() {
   _update_center_of_mass();
 }
 
-void Cell::print_particles() {
+void Cell::print_particles() const {
   for (const auto &p : _particles) {
     p.print_info();
   }
@@ -171,7 +171,7 @@ void Cell::print_particles() {
   std::cout << "Mass: " << _mass << std::endl;
 }
 
-double Cell::get_center_of_mass_x() { return _center_of_mass_x; }
-double Cell::get_center_of_mass_y() { return _center_of_mass_y; }
-double Cell::get_cell_mass() { return _mass; }
-std::vector<Particle> &Cell::get_particles() { return _particles; }
+double Cell::get_center_of_mass_x() const { return _center_of_mass_x; }
+double Cell::get_center_of_mass_y() const { return _center_of_mass_y; }
+double Cell::get_cell_mass() const { return _mass; }
+const std::vector<Particle> &Cell::get_particles() { return _particles; }

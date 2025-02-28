@@ -1,9 +1,7 @@
 #include "Cell.hpp"
 #include "Grid.hpp"
-#define _USE_MATH_DEFINES
-
-#include "Grid.hpp"
 #include "Particle.hpp"
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <iostream>
 #include <omp.h>

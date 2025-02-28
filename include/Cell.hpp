@@ -25,16 +25,16 @@ public:
   Cell(double x, double y, double side);
 
   void add_particle(Particle &p);
-  bool is_particle_inside(Particle &p);
+  bool is_particle_inside(const Particle &p);
   std::vector<Particle>
   update_particles(const std::vector<Cell> &adjacent_cells);
   void finish_update();
-  void print_particles();
+  void print_particles() const;
 
-  double get_center_of_mass_x();
-  double get_center_of_mass_y();
-  double get_cell_mass();
-  std::vector<Particle> &get_particles();
+  double get_center_of_mass_x() const;
+  double get_center_of_mass_y() const;
+  double get_cell_mass() const;
+  const std::vector<Particle> &get_particles();
 };
 
 #endif
