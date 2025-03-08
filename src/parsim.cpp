@@ -72,8 +72,9 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
     }
   }
   
-
+  
   // assign particles to corresponding cells
+  //#pragma omp parallel for
   for (auto &p : pv) {
     long cell_x = static_cast<long>(p.x / cell_size);
     long cell_y = static_cast<long>(p.y / cell_size);
