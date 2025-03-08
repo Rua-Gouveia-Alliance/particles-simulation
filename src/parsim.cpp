@@ -42,7 +42,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
 
   init_r4uni(seed);
   par.resize(n_part);
-
+  //TODO can we change the init_part?
   for (i = 0; i < n_part; i++) {
     par[i].x = rnd01() * side;
     par[i].y = rnd01() * side;
@@ -54,20 +54,24 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par[0].first_particle = true;
 }
 
+
 Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
   Grid grid(side, ncside);
   double cell_size = side / ncside;
 
-  // create cells
+  //TODO can we change this to one loop
+  #pragma omp parallel for collapse(2)
   for (long i = 0; i < ncside; i++) {
     double y = i * cell_size;
     for (long j = 0; j < ncside; j++) {
       double x = j * cell_size;
 
       Cell cell(x, y, cell_size);
+      #pragma omp critical
       grid.add_cell(cell);
     }
   }
+  
 
   // assign particles to corresponding cells
   for (auto &p : pv) {
