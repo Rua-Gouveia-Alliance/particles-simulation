@@ -45,6 +45,7 @@ void Cell::_check_collisions() {
 
   for (i = 0; i < p_count; i++) {
     if(collided[i]) continue;
+    bool found_colision = false;
 
     const Particle &pi = _particles[i];
 
@@ -61,38 +62,43 @@ void Cell::_check_collisions() {
         bool three_particles_collided = false;
         for(long long k = j + 1; k < p_count; k++)
         {
+          if (collided[k]) continue;
           const Particle &pk = _particles[k];
 
           dx = pi.x - pk.x;
           dy = pi.y - pk.y;
 
-          distance_sq_x_k = dx * dy + dy * dy;
+          distance_sq_x_k = dx * dx + dy * dy;
 
           dx = pj.x - pk.x;
           dy = pj.y - pk.y;
 
-          distance_sq_j_k =  dx * dy + dy * dy;
+          distance_sq_j_k =  dx * dx + dy * dy;
 
           if(distance_sq_x_k < EPSILON2 && distance_sq_j_k < EPSILON2)
           {
+            // 3 particle collided
             collisions++;
             collided[i] = true;
             collided[j] = true;
             collided[k] = true;
-            three_particles_collided = true;
+            found_colision = true;
             break;
           }
          
       }
-      if(!three_particles_collided)
+      if(!found_colision)
       {
+        //only 2 collided 
         collided[i] = true;
         collided[j] = true;
         collisions ++;
+        found_colision = true;
       }
+      break;
       }
     }
-
+    
     if (!collided[i])
       final_particles.push_back(_particles[i]);
   }
