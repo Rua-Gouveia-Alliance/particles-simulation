@@ -40,15 +40,16 @@ void Cell::_check_collisions() {
   std::vector<Particle> final_particles;
   long long p_count = _particles.size();
   std::vector<bool> collided(p_count, false);
-  double dx, dy, distance_sq;
+  double dx, dy, distance_sq, distance_sq_x_k, distance_sq_j_k;
   long long i;
 
   for (i = 0; i < p_count; i++) {
+    if(collided[i]) continue;
+
     const Particle &pi = _particles[i];
 
     for (long long j = i + 1; j < p_count; j++) {
-      if (i == j)
-        continue;
+      if(collided[j]) continue;
 
       const Particle &pj = _particles[j];
 
@@ -57,9 +58,38 @@ void Cell::_check_collisions() {
       distance_sq = dx * dx + dy * dy;
 
       if (distance_sq < EPSILON2) {
-        collisions++;
+        bool three_particles_collided = false;
+        for(long long k = j + 1; k < p_count; k++)
+        {
+          const Particle &pk = _particles[k];
+
+          dx = pi.x - pk.x;
+          dy = pi.y - pk.y;
+
+          distance_sq_x_k = dx * dy + dy * dy;
+
+          dx = pj.x - pk.x;
+          dy = pj.y - pk.y;
+
+          distance_sq_j_k =  dx * dy + dy * dy;
+
+          if(distance_sq_x_k < EPSILON2 && distance_sq_j_k < EPSILON2)
+          {
+            collisions++;
+            collided[i] = true;
+            collided[j] = true;
+            collided[k] = true;
+            three_particles_collided = true;
+            break;
+          }
+         
+      }
+      if(!three_particles_collided)
+      {
         collided[i] = true;
         collided[j] = true;
+        collisions ++;
+      }
       }
     }
 
