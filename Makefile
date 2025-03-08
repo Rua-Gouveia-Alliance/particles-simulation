@@ -16,7 +16,7 @@ INCLUDE_PATH := include
 INCLUDE_FLAG := $(addprefix -I, $(INCLUDE_PATH))
 
 # flags
-CPPFLAGS ?= $(INCLUDE_FLAG) -O2
+CPPFLAGS ?= $(INCLUDE_FLAG) -O2 -fopenmp
 LDFLAGS ?= -fopenmp
 
 # final target

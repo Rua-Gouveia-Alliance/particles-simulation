@@ -1,6 +1,8 @@
 #include "Grid.hpp"
 #include <iostream>
 
+#include <omp.h>
+
 Grid::Grid(double side, long ncside)
     : _side(side), _ncside(ncside), _first_particle(_default_first_particle) {}
 
@@ -29,6 +31,7 @@ void Grid::_add_particle_to_cell(Particle &p) {
   long cell_y = static_cast<long>(p.y / cell_size) % _ncside;
 
   long cell_idx = cell_x + cell_y * _ncside;
+#pragma omp critical
   _cells[cell_idx].add_particle(p);
 }
 
@@ -56,6 +59,7 @@ std::vector<long> Grid::get_adjacent_cells(long ci) {
 }
 
 void Grid::update_cells() {
+#pragma omp parallel for
   for (long i = 0; i < _cells.size(); i++) {
     Cell &curr_cell = _cells[i];
     double cell_side;
