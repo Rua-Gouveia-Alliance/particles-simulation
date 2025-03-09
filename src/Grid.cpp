@@ -31,7 +31,7 @@ void Grid::_add_particle_to_cell(Particle &p) {
   long cell_y = static_cast<long>(p.y / cell_size) % _ncside;
 
   long cell_idx = cell_x + cell_y * _ncside;
-  #pragma omp critical
+  //#pragma omp critical
   _cells[cell_idx].add_particle(p);
 }
 
@@ -59,7 +59,7 @@ std::vector<long> Grid::get_adjacent_cells(long ci) {
 }
 
 void Grid::update_cells() {
-  #pragma omp parallel for
+  //#pragma omp parallel for //TODO aqui estava a dar o erro do malloc por isso comentei
   for (long i = 0; i < _cells.size(); i++) {
     Cell &curr_cell = _cells[i];
     double cell_side;
