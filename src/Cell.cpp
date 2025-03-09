@@ -50,7 +50,6 @@ void Cell::_check_collisions()
   std::vector<bool> collided(p_count, false);
   double dx, dy, distance_sq, distance_sq_x_k, distance_sq_j_k;
   long long i;
-
   for (i = 0; i < p_count; i++)
   {
     if (collided[i])
@@ -92,10 +91,12 @@ void Cell::_check_collisions()
           if (distance_sq_x_k < EPSILON2 && distance_sq_j_k < EPSILON2)
           {
             // 3 particle collided
-            collisions++;
+           
+
             collided[i] = true;
             collided[j] = true;
             collided[k] = true;
+            collisions++;
             found_colision = true;
             break;
           }
@@ -103,10 +104,13 @@ void Cell::_check_collisions()
         if (!found_colision)
         {
           // only 2 collided
+          #pragma omp critical
+          {
           collided[i] = true;
           collided[j] = true;
           collisions++;
           found_colision = true;
+        }
         }
         break;
       }
@@ -114,6 +118,7 @@ void Cell::_check_collisions()
 
     if (!collided[i])
       final_particles.push_back(_particles[i]);
+
   }
 
   _particles = final_particles;
@@ -132,18 +137,20 @@ Cell::update_particles(const std::vector<Cell> &adjacent_cells)
   double force_x, force_y;
   double ax, ay;
   double Gm_i;
+  const double delta_squared = DELTAT * DELTAT;
 #pragma omp parallel private(new_particle, Gm_i, dx, dy, distance_sq, inv_distance_sqrt, force, force_x, force_y, ax, ay)
   {
     // Create a local copy of forces for each thread
     std::vector<std::pair<double, double>> local_forces(_particles.size(), {0.0, 0.0});
 
-#pragma omp for
+#pragma omp for  //simd is this better?
     for (long long i = 0; i < _particles.size(); i++)
     {
       const Particle &pi = _particles[i];
       Gm_i = G * _particles[i].m;
 
       // Calculate resulting force for particles inside the same cell
+      //#pragma omp simd //TODO is this better
       for (long long j = i + 1; j < _particles.size(); j++)
       {
         dx = _particles[j].x - pi.x;
@@ -205,8 +212,8 @@ Cell::update_particles(const std::vector<Cell> &adjacent_cells)
     new_particle.vx = pi.vx + ax * DELTAT;
     new_particle.vy = pi.vy + ay * DELTAT;
 
-    new_particle.x = pi.x + pi.vx * DELTAT + 0.5 * ax * (DELTAT * DELTAT);
-    new_particle.y = pi.y + pi.vy * DELTAT + 0.5 * ay * (DELTAT * DELTAT);
+    new_particle.x = pi.x + pi.vx * DELTAT + 0.5 * ax * (delta_squared);
+    new_particle.y = pi.y + pi.vy * DELTAT + 0.5 * ay * (delta_squared);
 
     if (pi.first_particle)
       new_particle.first_particle = true;
