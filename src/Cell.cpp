@@ -121,32 +121,41 @@ void Cell::_check_collisions()
 
 void Cell::add_particle(Particle &p) { _temp_particles.push_back(p); }
 
-std::vector<Particle> Cell::update_particles(const std::vector<Cell> &adjacent_cells)
+std::vector<Particle>
+Cell::update_particles(const std::vector<Cell> &adjacent_cells)
 {
-  std::vector<Particle> new_particles(_particles.size());
-
-#pragma omp parallel
+  Particle new_particle;
+  std::vector<Particle> new_particles;
+  std::vector<std::pair<double, double>> forces(_particles.size(), {0.0, 0.0});
+  double force;
+  double dx, dy, distance_sq, inv_distance_sqrt;
+  double force_x, force_y;
+  double ax, ay;
+  double Gm_i;
+#pragma omp parallel private(new_particle, Gm_i, dx, dy, distance_sq, inv_distance_sqrt, force, force_x, force_y, ax, ay)
   {
+    // Create a local copy of forces for each thread
     std::vector<std::pair<double, double>> local_forces(_particles.size(), {0.0, 0.0});
 
-#pragma omp for schedule(dynamic) nowait
+#pragma omp for
     for (long long i = 0; i < _particles.size(); i++)
     {
       const Particle &pi = _particles[i];
-      double Gm_i = G * pi.m;
+      Gm_i = G * _particles[i].m;
 
-// Calculate forces within the same cell
-#pragma omp simd
+      // Calculate resulting force for particles inside the same cell
       for (long long j = i + 1; j < _particles.size(); j++)
       {
-        double dx = _particles[j].x - pi.x;
-        double dy = _particles[j].y - pi.y;
-        double distance_sq = dx * dx + dy * dy;
+        dx = _particles[j].x - pi.x;
+        dy = _particles[j].y - pi.y;
+        distance_sq = dx * dx + dy * dy;
 
-        double force = Gm_i * _particles[j].m / distance_sq;
-        double inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
-        double force_x = force * dx * inv_distance_sqrt;
-        double force_y = force * dy * inv_distance_sqrt;
+        force = Gm_i * _particles[j].m;
+        force /= distance_sq;
+
+        inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
+        force_x = force * (dx * inv_distance_sqrt);
+        force_y = force * (dy * inv_distance_sqrt);
 
         local_forces[i].first += force_x;
         local_forces[j].first -= force_x;
@@ -154,39 +163,55 @@ std::vector<Particle> Cell::update_particles(const std::vector<Cell> &adjacent_c
         local_forces[j].second -= force_y;
       }
 
-      // Calculate forces from adjacent cells
+      // Calculate resulting force for adjacent cells
       for (const auto &ac : adjacent_cells)
       {
         if (ac.mass == 0)
           continue;
 
-        double dx = ac.center_of_mass_x - pi.x;
-        double dy = ac.center_of_mass_y - pi.y;
-        double distance_sq = dx * dx + dy * dy;
+        dx = ac.center_of_mass_x - pi.x;
+        dy = ac.center_of_mass_y - pi.y;
+        distance_sq = dx * dx + dy * dy;
 
-        double force = Gm_i * ac.mass / distance_sq;
-        double inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
+        force = Gm_i * ac.mass;
+        force /= distance_sq;
 
-        local_forces[i].first += force * dx * inv_distance_sqrt;
-        local_forces[i].second += force * dy * inv_distance_sqrt;
+        inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
+        local_forces[i].first += force * (dx * inv_distance_sqrt);
+        local_forces[i].second += force * (dy * inv_distance_sqrt);
       }
     }
 
-#pragma omp for schedule(dynamic) nowait
-    for (long long i = 0; i < _particles.size(); i++)
+// Combine local_forces into the global forces array
+#pragma omp critical
     {
-      double ax = local_forces[i].first / _particles[i].m;
-      double ay = local_forces[i].second / _particles[i].m;
-
-      new_particles[i] = Particle(_particles[i].m);
-      new_particles[i].vx = _particles[i].vx + ax * DELTAT;
-      new_particles[i].vy = _particles[i].vy + ay * DELTAT;
-      new_particles[i].x = _particles[i].x + _particles[i].vx * DELTAT + 0.5 * ax * DELTAT * DELTAT;
-      new_particles[i].y = _particles[i].y + _particles[i].vy * DELTAT + 0.5 * ay * DELTAT * DELTAT;
-
-      if (_particles[i].first_particle)
-        new_particles[i].first_particle = true;
+      for (size_t i = 0; i < forces.size(); i++)
+      {
+        forces[i].first += local_forces[i].first;
+        forces[i].second += local_forces[i].second;
+      }
     }
+  }
+
+  // Calculate new positions and velocities
+  for (long long i = 0; i < _particles.size(); i++)
+  {
+    const Particle &pi = _particles[i];
+    new_particle = Particle(pi.m);
+
+    ax = forces[i].first / pi.m;
+    ay = forces[i].second / pi.m;
+
+    new_particle.vx = pi.vx + ax * DELTAT;
+    new_particle.vy = pi.vy + ay * DELTAT;
+
+    new_particle.x = pi.x + pi.vx * DELTAT + 0.5 * ax * (DELTAT * DELTAT);
+    new_particle.y = pi.y + pi.vy * DELTAT + 0.5 * ay * (DELTAT * DELTAT);
+
+    if (pi.first_particle)
+      new_particle.first_particle = true;
+
+    new_particles.push_back(new_particle);
   }
 
   return new_particles;
