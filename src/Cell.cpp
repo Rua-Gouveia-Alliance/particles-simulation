@@ -57,8 +57,10 @@ void Cell::_check_collisions() {
       distance_sq = dx * dx + dy * dy;
 
       if (distance_sq < EPSILON2) {
-        collisions++;
-        collided[i] = true;
+        if (!collided[i]) {
+          collisions++;
+          collided[i] = true;
+        }
         collided[j] = true;
       }
     }
