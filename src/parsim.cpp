@@ -42,7 +42,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
 
   init_r4uni(seed);
   par.resize(n_part);
-  //TODO can we change the init_part?
+
   for (i = 0; i < n_part; i++) {
     par[i].x = rnd01() * side;
     par[i].y = rnd01() * side;
@@ -54,11 +54,10 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par[0].first_particle = true;
 }
 
-
 Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
   Grid grid(side, ncside);
   double cell_size = side / ncside;
-  long n_cells = ncside * ncside ;
+
   for (long i = 0; i < ncside; i++) {
     double y = i * cell_size;
     for (long j = 0; j < ncside; j++) {
@@ -66,21 +65,21 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
       Cell cell(x, y, cell_size);
       grid.add_cell(cell);
     }
-
   }
-  
+
   // assign particles to corresponding cells
-  #pragma omp parallel for
+#pragma omp parallel for
   for (auto &p : pv) {
     long cell_x = static_cast<long>(p.x / cell_size);
     long cell_y = static_cast<long>(p.y / cell_size);
 
     long cell_idx = cell_x + cell_y * ncside;
-    #pragma omp critical
+#pragma omp critical
     grid._cells[cell_idx].add_particle(p);
   }
 
   // initialize cell
+#pragma omp parallel for
   for (auto &c : grid._cells) {
     c.finish_update();
   }
@@ -90,7 +89,9 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
 
 void simulation(Grid &grid, long long time_steps) {
   for (long long ll = 0; ll < time_steps; ll++) {
+    std::cout << "ROUND " << ll << std::endl;
     grid.update_cells();
+    // grid.print_cells();
   }
 }
 
@@ -122,6 +123,12 @@ int main(int argc, char *argv[]) {
 
     exec_time = -omp_get_wtime();
     Grid grid = init_grid(side, ncside, particles);
+
+    // debug
+    // std::cout << "Initial Grid:" << std::endl;
+    // grid.print_cells();
+    std::cout << std::endl;
+
     simulation(grid, time_steps);
     exec_time += omp_get_wtime();
 

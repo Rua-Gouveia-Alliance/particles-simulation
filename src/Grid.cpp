@@ -1,4 +1,5 @@
 #include "Grid.hpp"
+#include "Particle.hpp"
 #include <iostream>
 
 #include <omp.h>
@@ -31,7 +32,7 @@ void Grid::_add_particle_to_cell(Particle &p) {
   long cell_y = static_cast<long>(p.y / cell_size) % _ncside;
 
   long cell_idx = cell_x + cell_y * _ncside;
-  //#pragma omp critical
+#pragma omp critical
   _cells[cell_idx].add_particle(p);
 }
 
@@ -59,9 +60,11 @@ std::vector<long> Grid::get_adjacent_cells(long ci) {
 }
 
 void Grid::update_cells() {
-  //TODO
-  //#pragma omp parallel for
-  for (long i = 0; i < _cells.size(); i++) {
+  long num_cells = _cells.size();
+  std::vector<std::vector<Particle>> new_particles(num_cells);
+
+#pragma omp parallel for
+  for (long i = 0; i < num_cells; i++) {
     Cell &curr_cell = _cells[i];
     double cell_side;
 
@@ -88,20 +91,20 @@ void Grid::update_cells() {
       adjacent_cells.push_back(new_cell);
     }
 
-    std::vector<Particle> new_particles =
-        curr_cell.update_particles(adjacent_cells);
-        //#pragma omp critical
-        //{
-    for (auto &p : new_particles) {
+    new_particles[i] = curr_cell.update_particles(adjacent_cells);
+  }
+
+#pragma omp parallel for
+  for (auto &v : new_particles) {
+    for (auto &p : v) {
       if (p.first_particle)
         _first_particle = p;
 
       _add_particle_to_cell(p);
     }
-  //}
-  
   }
-  #pragma omp parallel for
+
+#pragma omp parallel for
   for (auto &c : _cells) {
     c.finish_update();
   }
