@@ -24,7 +24,7 @@ The table below shows the execution times (in seconds) for the serial, OpenMP, a
 | Serial  | 1                       | 83.7s                        |                              |                 
 | OpenMP  | 1                       | X.XX                         |                              |                 
 | OpenMP  | 2                       | X.XX                         |                              |                 
-| OpenMP  | 4                       | 35.4s                        |   23.8s                      |                 
+| OpenMP  | 4                       | 27.7s                        |   23.8s | updated 25.2s                      |                 
 | OpenMP  | 8                       | X.XX                         |                              |                 
 | MPI     | 1                       | X.XX                         |                              |                 
 | MPI     | 2                       | X.XX                         |                              |                 
