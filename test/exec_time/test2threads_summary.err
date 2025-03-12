@@ -1,0 +1,12 @@
+TEST 01 with 2 threads -> 0.0s
+TEST 02 with 2 threads -> 0.0s
+TEST 03 with 2 threads -> 0.0s
+TEST 04 with 2 threads -> 32.1s
+TEST 05 with 2 threads -> 26.4s
+TEST 06 with 2 threads -> 1.0s
+TEST 07 with 2 threads -> 22.7s
+TEST 08 with 2 threads -> 29.1s
+TEST 09 with 2 threads -> 145.0s
+TEST 10 with 2 threads -> 163.4s
+TEST 11 with 2 threads -> 268.1s
+TEST 12 with 2 threads -> 46.9s

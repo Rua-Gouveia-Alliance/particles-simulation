@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the thread counts to test
-thread_counts=(4)
+thread_counts=(1 2 4 8)
 
 # Loop through each thread count
 for threads in "${thread_counts[@]}"

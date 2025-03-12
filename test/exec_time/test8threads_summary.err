@@ -1,0 +1,12 @@
+TEST 01 with 8 threads -> 0.0s
+TEST 02 with 8 threads -> 0.0s
+TEST 03 with 8 threads -> 0.0s
+TEST 04 with 8 threads -> 19.1s
+TEST 05 with 8 threads -> 20.0s
+TEST 06 with 8 threads -> 0.8s
+TEST 07 with 8 threads -> 17.0s
+TEST 08 with 8 threads -> 9.4s
+TEST 09 with 8 threads -> 74.3s
+TEST 10 with 8 threads -> 81.3s
+TEST 11 with 8 threads -> 133.5s
+TEST 12 with 8 threads -> 40.2s
