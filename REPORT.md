@@ -70,4 +70,4 @@ The table below shows the execution times (in seconds) for the serial and OpenMP
 
 ## 6. Conclusion
 
-The project successfully implemented a parallel particles simulation, demonstrating significant speedups using OpenMP. The next step is to use MPI to parallelize the workload across different machines, and exploring an hybrid MPI+OpenMP approach for even better scalability.
+The project successfully implemented a parallel particles simulation, demonstrating significant speedups using OpenMP. The next step is to use MPI to parallelize the workload across different machines, and exploring an hybrid MPI+OpenMP approach for even better performance and scalability.
