@@ -1,6 +1,5 @@
 #include "Cell.hpp"
 #include "Particle.hpp"
-#include "UnionFind.cpp"
 
 #include <algorithm>
 #include <cmath>
@@ -12,7 +11,7 @@ Cell::Cell(double x, double y, double side) : x(x), y(y), side(side){};
 
 void Cell::_update_mass() {
   double total = 0;
-  //#pragma omp parallel for reduction(+:total)
+  // #pragma omp parallel for reduction(+:total)
   for (const auto &p : _particles) {
     total += p.m;
   }
@@ -28,7 +27,7 @@ void Cell::_update_center_of_mass() {
     center_of_mass_y = -1;
     return;
   }
-  //#pragma omp parallel for reduction(+:x_res, y_res)
+  // #pragma omp parallel for reduction(+:x_res, y_res)
   for (const auto &p : _particles) {
     x_res += p.m * p.x;
     y_res += p.m * p.y;
@@ -38,54 +37,6 @@ void Cell::_update_center_of_mass() {
   center_of_mass_y = y_res / mass;
 }
 
-/*void Cell::_check_collisions() {
-  std::vector<Particle> final_particles;
-  long long p_count = _particles.size();
-  std::vector<bool> collided(p_count, false);
-  double dx, dy, distance_sq;
-  long long i;
-
-  UnionFind uf(p_count);
-  if(p_count == 0) return;
-  
-  for (i = 0; i < p_count; i++) {
-    const Particle &pi = _particles[i];
-    bool is_collision = false;
-    for (long long j = i + 1; j < p_count; j++) {
-      if (i == j)
-        continue;
-
-      const Particle &pj = _particles[j];
-
-      dx = pi.x - pj.x;
-      dy = pi.y - pj.y;
-      distance_sq = dx * dx + dy * dy;
- 
-      if (distance_sq < EPSILON2) {
-        if (!collided[i]) {
-          uf.unite(i, j);
-          collided[i] = true;
-          collided[j] = true;
-        }
-      }
-    }
-  }
-  std::unordered_map<long long, bool> unique_collisions;
-  for (long long i = 0; i < p_count; ++i) {
-    if (collided[i]) {
-      unique_collisions[uf.find(i)] = true;
-    }
-  }
-
-  collisions += unique_collisions.size();
-
-  for (long long i = 0; i < p_count; ++i) {
-    if (!collided[i]) {
-      final_particles.push_back(_particles[i]);
-    }
-}
-  _particles = final_particles;
-}*/
 void Cell::_check_collisions() {
   std::vector<Particle> final_particles;
   long long p_count = _particles.size();
@@ -107,10 +58,9 @@ void Cell::_check_collisions() {
       distance_sq = dx * dx + dy * dy;
 
       if (distance_sq < EPSILON2) {
-        if (!collided[i]) {
+        if (!collided[i] && !collided[j])
           collisions++;
-          collided[i] = true;
-        }
+        collided[i] = true;
         collided[j] = true;
       }
     }
@@ -121,7 +71,6 @@ void Cell::_check_collisions() {
 
   _particles = final_particles;
 }
-
 
 void Cell::add_particle(Particle &p) { _temp_particles.push_back(p); }
 
