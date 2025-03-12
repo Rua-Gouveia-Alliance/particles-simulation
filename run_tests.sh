@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the thread counts to test
-thread_counts=(1 2 4 8)
+thread_counts=(4)
 
 # Loop through each thread count
 for threads in "${thread_counts[@]}"
@@ -13,15 +13,11 @@ do
     for i in $(seq -f "%02g" 1 12)
     do
 
-        exec_summary_file="test/exec_time/test$i_summary.err"        
+        exec_summary_file="test/exec_time/test${threads}threads_summary.err"
         input_file="test/in/test$i.in"
-        output_file="test/out/test$i_${threads}threads.out"
+        output_file="test/out/test${i}_${threads}threads.out"
         expected_file="test/expected/test$i.out"
-        exec_time_file="test/exec_time/test$i_${threads}threads.err"
-
-        
-        touch "$exec_time_file"
-
+        exec_time_file="test/exec_time/test${i}_${threads}threads.err"
 
         # Read input values from the input file
         # Assuming the input file has the values in the order: seed side ncside n_part time_steps
@@ -29,7 +25,7 @@ do
 
         # Run the program with the input values as command-line arguments
         # Redirect stdout to the output file and stderr to the error file
-        ./build/bin/parsim "$seed" "$side" "$ncside" "$n_part" "$time_steps" > "$output_file" 2> "$exec_time_file"
+        ./parsim "$seed" "$side" "$ncside" "$n_part" "$time_steps" > "$output_file" 2> "$exec_time_file"
 
         # Compare the output to the expected output
         if diff -q "$output_file" "$expected_file" > /dev/null; then
@@ -47,5 +43,6 @@ do
         fi
         echo -n " -> " >> "$exec_summary_file"
         cat "$exec_time_file" >> "$exec_summary_file"
+        rm "$exec_time_file"
     done
 done

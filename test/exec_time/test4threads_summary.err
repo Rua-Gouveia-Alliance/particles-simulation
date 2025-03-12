@@ -1,0 +1,12 @@
+TEST 01 with 4 threads -> 0.0s
+TEST 02 with 4 threads -> 0.0s
+TEST 03 with 4 threads -> 0.0s
+TEST 04 with 4 threads -> 21.8s
+TEST 05 with 4 threads -> 25.1s
+TEST 06 with 4 threads -> 0.9s
+TEST 07 with 4 threads -> 17.8s
+TEST 08 with 4 threads -> 15.4s
+TEST 09 with 4 threads -> 91.5s
+TEST 10 with 4 threads -> 101.1s
+TEST 11 with 4 threads -> 167.2s
+TEST 12 with 4 threads -> 45.4s

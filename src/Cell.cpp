@@ -12,7 +12,7 @@ Cell::Cell(double x, double y, double side) : x(x), y(y), side(side){};
 void Cell::_update_mass() {
   double total = 0;
 
-  // #pragma omp parallel for reduction(+:total)
+  #pragma omp parallel for reduction(+:total)
   for (const auto &p : _particles) {
     total += p.m;
   }
@@ -29,7 +29,7 @@ void Cell::_update_center_of_mass() {
     return;
   }
 
-  // #pragma omp parallel for reduction(+:x_res, y_res)
+  #pragma omp parallel for reduction(+:x_res, y_res)
   for (const auto &p : _particles) {
     x_res += p.m * p.x;
     y_res += p.m * p.y;
