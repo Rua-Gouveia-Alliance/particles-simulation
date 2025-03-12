@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the thread counts to test
-thread_counts=(4 8)
+thread_counts=(1 2 4 8)
 
 # Loop through each thread count
 for threads in "${thread_counts[@]}"
@@ -40,7 +40,7 @@ do
             diff "$output_file" "$expected_file"
         fi
 
-            # Print the execution time (stderr content) in the desired format
+        # Print the execution time (stderr content) in the desired format
         echo -n "TEST $i with $threads thread" >> "$exec_summary_file"
         if [ "$threads" -gt 1 ]; then
             echo -n "s" >> "$exec_summary_file"
