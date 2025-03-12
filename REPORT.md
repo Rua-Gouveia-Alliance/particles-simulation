@@ -1,6 +1,6 @@
 # Project Report
 
-Group 5:
+**Group 5**
 - Gonçalo Rua 102604
 - Rodrigo Arêde 102606
 - João Gouveia 102611
@@ -28,7 +28,7 @@ proceed to add them to the correct cells.
 
 ## 4. Load Balancing
 
-#TODO With OpenMP we used dynamic scheduling to evenly distrubte computation across threads. This technique distributes workload among threads at runtime rather than assigning it statically before execution. Comparing the static vs dynamic approach, the latter gives us the best performance of the two.
+With OpenMP we used dynamic scheduling to evenly distrubte computation across threads. This technique distributes workload among threads at runtime rather than assigning it statically before execution. Comparing the static vs dynamic approach, the latter gives us the best performance of the two.
 
 ## 5. Performance Results
 
@@ -58,15 +58,15 @@ The table below shows the execution times (in seconds) for the serial and OpenMP
 | 1           | 0.0s              | 0.0s      | 0.0s      | 0.0s      |
 | 2           | 0.0s              | 0.0s      | 0.0s      | 0.0s      |
 | 3           | 0.0s              | 0.0s      | 0.0s      | 0.0s      |
-| 4           | 53.9s             | 32.1s     | 21.8s     | 19.1s     |
-| 5           | 49.7s             | 26.4s     | 25.2s     | 20.0s     |
+| 4           | 53.9s             | 31.4s     | 21.2s     | 16.7s     |
+| 5           | 49.7s             | 25.5s     | 13.6s     | 7.5s      |
 | 6           | 1.6s              | 1.0s      | 0.8s      | 0.8s      |
-| 7           | 34.9s             | 22.7s     | 17.5s     | 17.0s     |
-| 8           | 57.1s             | 29.1s     | 15.6s     | 9.4s      |
-| 9           | 245.9s            | 145.0s    | 93.0s     | 74.3s     |
-| 10          | 289.4s            | 163.4s    | 100.9s    | 81.3s     |
-| 11          | 481.9s            | 268.1s    | 167.9s    | 133.5s    |
-| 12          | 81.8s             | 46.9s     | 46.2s     | 40.2s     |
+| 7           | 34.9s             | 23.0s     | 18.1s     | 15.7s     |
+| 8           | 57.1s             | 29.7s     | 15.6s     | 8.7s      |
+| 9           | 245.9s            | 141.4s    | 89.8s     | 68.0s     |
+| 10          | 289.4s            | 160.5s    | 100.1s    | 74.1s     |
+| 11          | 481.9s            | 263.0s    | 171.8s    | 128.5s    |
+| 12          | 81.8s             | 45.7s     | 30.4s     | 24.0s     |
 
 ## 6. Conclusion
 

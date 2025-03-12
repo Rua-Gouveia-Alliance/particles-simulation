@@ -63,7 +63,7 @@ void Grid::update_cells() {
   long num_cells = _cells.size();
   std::vector<std::vector<Particle>> new_particles(num_cells);
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
   for (long i = 0; i < num_cells; i++) {
     Cell &curr_cell = _cells[i];
     double cell_side;
@@ -94,7 +94,7 @@ void Grid::update_cells() {
     new_particles[i] = curr_cell.update_particles(adjacent_cells);
   }
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
   for (auto &v : new_particles) {
     for (auto &p : v) {
       if (p.first_particle)
@@ -104,7 +104,7 @@ void Grid::update_cells() {
     }
   }
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
   for (auto &c : _cells) {
     c.finish_update();
   }
