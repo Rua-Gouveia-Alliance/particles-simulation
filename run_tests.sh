@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the thread counts to test
-thread_counts=(1 2 4 8)
+thread_counts=(4 8)
 
 # Loop through each thread count
 for threads in "${thread_counts[@]}"
@@ -10,14 +10,14 @@ do
     export OMP_NUM_THREADS=$threads
 
     # Loop through each test file
-    for i in {1..5}
+    for i in $(seq -f "%02g" 1 12)
     do
-        exec_summary_file="test/exec_time/test0$i_summary.err"
-        # Define the input, output, expected, and error file names
-        input_file="test/in/test0$i.in"
-        output_file="test/out/test0$i_${threads}threads.out"
-        expected_file="test/expected/test0$i.out"
-        exec_time_file="test/exec_time/test0$i_${threads}threads.err"
+
+        exec_summary_file="test/exec_time/test$i_summary.err"        
+        input_file="test/in/test$i.in"
+        output_file="test/out/test$i_${threads}threads.out"
+        expected_file="test/expected/test$i.out"
+        exec_time_file="test/exec_time/test$i_${threads}threads.err"
 
         
         touch "$exec_time_file"
@@ -40,8 +40,12 @@ do
             diff "$output_file" "$expected_file"
         fi
 
-        # Print the execution time (stderr content)
-        echo -n "Test $i with $threads threads -> " >> "$exec_summary_file"
+            # Print the execution time (stderr content) in the desired format
+        echo -n "TEST $i with $threads thread" >> "$exec_summary_file"
+        if [ "$threads" -gt 1 ]; then
+            echo -n "s" >> "$exec_summary_file"
+        fi
+        echo -n " -> " >> "$exec_summary_file"
         cat "$exec_time_file" >> "$exec_summary_file"
     done
 done
