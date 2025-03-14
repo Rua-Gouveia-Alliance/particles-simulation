@@ -1,6 +1,8 @@
 # Project Report
+## PARTICLES SIMULATION (OpenMP)
 
 **Group 5**
+
 - Gonçalo Rua 102604
 - Rodrigo Arêde 102606
 - João Gouveia 102611
