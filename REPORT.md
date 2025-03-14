@@ -16,19 +16,19 @@ the computational efficiency through parallelization.
 The 2D space is divided into a grid, where each cell's center of mass is used to approximate the gravitational interactions.
 We took the approach of parallelizing the cells of the grid, with the objective of each cell being processed concurrently with
 other cells. We also parallelized the generation of the initial grid which required calculations to attribute each particle to
-the correspoding cell where it's initially located.
+the corresponding cell where it's initially located.
 
 ## 3. Synchronization concerns
 
 We had some challenges with the synchronization of the different threads, specifically when we encountered problems with data
 dependencies between them. One clear example was the appending of newly updated particles to the cells, while other particles from
-different cells were being computed. To solve this problem we had to separate this stage in two, which led us to temporarly save
+different cells were being computed. To solve this problem we had to separate this stage in two, which led us to temporarily save
 all the new particles in a `vector<vector<Particles>>`, and only after all the particles in all the cells are done computing we
 proceed to add them to the correct cells.
 
 ## 4. Load Balancing
 
-With OpenMP we used dynamic scheduling to evenly distrubte computation across threads. This technique distributes workload among threads at runtime rather than assigning it statically before execution. Comparing the static vs dynamic approach, the latter gives us the best performance of the two.
+With OpenMP we used dynamic scheduling to evenly distribute computation across threads. This technique distributes workload among threads at runtime rather than assigning it statically before execution. Comparing the static vs dynamic approach, the latter gives us the best performance of the two.
 
 ## 5. Performance Results
 
@@ -71,3 +71,8 @@ The table below shows the execution times (in seconds) for the serial and OpenMP
 ## 6. Conclusion
 
 The project successfully implemented a parallel particles simulation, demonstrating significant speedups using OpenMP. The next step is to use MPI to parallelize the workload across different machines, and exploring an hybrid MPI+OpenMP approach for even better performance and scalability.
+
+## Note: Changes to the serial version
+
+Regarding the serial version, we only fixed a mistake involving the calculation of the number of collisions during simulation.
+Our program was mistakenly counting collisions of 3 or more particles as more than 1 collision, which doesn't happen on the tests provided.
