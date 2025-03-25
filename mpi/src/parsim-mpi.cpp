@@ -50,7 +50,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   }
 
   init_r4uni(seed);
-  local_par.resize(n_part);
+  local_par.clear();
 
   long start_row, end_row;
   compute_grid_partition(ncside, size, rank,start_row, end_row);
@@ -193,6 +193,7 @@ int main(int argc, char *argv[]) {
     print_result(grid); // to stdout
   } catch (const std::exception &e) {
     std::cerr << "Error: Invalid input." << e.what() << "\n";
+    MPI_Finalize();
     return 1;
   }
   MPI_Finalize();
