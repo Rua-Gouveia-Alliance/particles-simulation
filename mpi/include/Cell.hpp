@@ -21,8 +21,9 @@ public:
   long _collisions = 0;
   double _x, _y, _side;
   double _center_of_mass_x, _center_of_mass_y, _mass;
+  int _rank;
 
-  Cell(double x, double y, double side);
+  Cell(double x, double y, double side, int rank);
 
   void add_particle(Particle &p);
   std::vector<Particle>
