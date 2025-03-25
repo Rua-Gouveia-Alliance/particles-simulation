@@ -5,6 +5,7 @@
 #define EPSILON2 (0.005 * 0.005)
 #define DELTAT 0.1
 
+#include "Mass.hpp"
 #include "Particle.hpp"
 #include <vector>
 
@@ -18,11 +19,11 @@ private:
   void _check_collisions();
 
 public:
+  Mass _mass;
   long _collisions = 0;
   double _x, _y, _side;
-  double _center_of_mass_x, _center_of_mass_y, _mass;
 
-  Cell(double x, double y, double side);
+  Cell(long id, double x, double y, double side);
 
   void add_particle(Particle &p);
   std::vector<Particle>
@@ -30,6 +31,7 @@ public:
   void finish_update();
   void print_particles() const;
 
+  long id() const;
   double get_center_of_mass_x() const;
   double get_center_of_mass_y() const;
   double get_cell_mass() const;

@@ -7,7 +7,8 @@
 #include <unordered_set>
 #include <vector>
 
-Cell::Cell(double x, double y, double side) : _x(x), _y(y), _side(side){};
+Cell::Cell(long id, double x, double y, double side)
+    : _x(x), _y(y), _side(side), _mass(id){};
 
 void Cell::_update_mass() {
   double total = 0;
@@ -21,9 +22,9 @@ void Cell::_update_center_of_mass() {
   double x_res = 0;
   double y_res = 0;
 
-  if (_mass == 0) {
-    _center_of_mass_x = -1;
-    _center_of_mass_y = -1;
+  if (_mass.val() == 0) {
+    _mass.x(-1);
+    _mass.y(-1);
     return;
   }
 
@@ -32,8 +33,8 @@ void Cell::_update_center_of_mass() {
     y_res += p._m * p._y;
   }
 
-  _center_of_mass_x = x_res / _mass;
-  _center_of_mass_y = y_res / _mass;
+  _mass.x(x_res / _mass.val());
+  _mass.y(y_res / _mass.val());
 }
 
 void Cell::_check_collisions() {
@@ -115,14 +116,14 @@ Cell::update_particles(const std::vector<Cell> &adjacent_cells) {
 
     // calculate resulting force for adjacent cells
     for (const auto &ac : adjacent_cells) {
-      if (ac._mass == 0)
+      if (ac._mass.val() == 0)
         continue;
 
-      dx = ac._center_of_mass_x - pi._x;
-      dy = ac._center_of_mass_y - pi._y;
+      dx = ac._mass.x() - pi._x;
+      dy = ac._mass.y() - pi._y;
       distance_sq = dx * dx + dy * dy;
 
-      force = Gm_i * ac._mass;
+      force = Gm_i * ac._mass.val();
       force /= distance_sq;
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
@@ -163,12 +164,13 @@ void Cell::print_particles() const {
   for (const auto &p : _particles) {
     p.print_info();
   }
-  std::cout << "Center of Mass: " << _center_of_mass_x << ", "
-            << get_center_of_mass_y() << std::endl;
-  std::cout << "Mass: " << _mass << std::endl;
+  std::cout << "Center of Mass: " << _mass.x() << ", " << _mass.y()
+            << std::endl;
+  std::cout << "Mass: " << _mass.val() << std::endl;
 }
 
-double Cell::get_center_of_mass_x() const { return _center_of_mass_x; }
-double Cell::get_center_of_mass_y() const { return _center_of_mass_y; }
-double Cell::get_cell_mass() const { return _mass; }
+long Cell::id() const { return _mass.id(); }
+double Cell::get_center_of_mass_x() const { return _mass.x(); }
+double Cell::get_center_of_mass_y() const { return _mass.y(); }
+double Cell::get_cell_mass() const { return _mass.val(); }
 const std::vector<Particle> &Cell::get_particles() { return _particles; }

@@ -1,10 +1,13 @@
 #include "Grid.hpp"
 #include <iostream>
 
-Grid::Grid(double side, long ncside)
-    : _side(side), _ncside(ncside), _first_particle(_default_first_particle) {}
+Grid::Grid(double side, long ncside, std::vector<int> dependents)
+    : _side(side), _ncside(ncside), _first_particle(_default_first_particle) {
+  for (const auto &d : dependents)
+    _new_particles.emplace(d, std::vector<Particle>());
+}
 
-void Grid::_add_particle_to_cell(Particle &p) {
+long Grid::_get_particle_cell(Particle &p) {
   double temp_px, temp_py;
 
   // wrap particle around
@@ -28,11 +31,19 @@ void Grid::_add_particle_to_cell(Particle &p) {
   long cell_x = static_cast<long>(p._x / cell_size) % _ncside;
   long cell_y = static_cast<long>(p._y / cell_size) % _ncside;
 
-  long cell_idx = cell_x + cell_y * _ncside;
-  _cells[cell_idx].add_particle(p);
+  return cell_x + cell_y * _ncside;
 }
 
-void Grid::add_cell(Cell &c) { _cells.push_back(c); }
+void Grid::_add_particle_to_cell(Particle &p) {
+  long cell_idx = _get_particle_cell(p);
+  if (_cells.find(cell_idx) != _cells.end()) {
+    _cells[cell_idx].add_particle(p);
+  } else {
+    _new_particles[cell_idx].push_back(p);
+  }
+}
+
+void Grid::add_cell(Cell &c) { _cells[c.id()] = c; }
 
 std::vector<long> Grid::get_adjacent_cells(long ci) {
   std::vector<long> adjacent;
@@ -68,16 +79,16 @@ void Grid::update_cells() {
 
       // wrapping in x direction
       if (new_cell._x >= curr_cell._x + cell_side * 2) {
-        new_cell._center_of_mass_x -= _side;
+        new_cell._mass.x(new_cell._mass.x() - _side);
       } else if (new_cell._x < curr_cell._x - cell_side) {
-        new_cell._center_of_mass_x += _side;
+        new_cell._mass.x(new_cell._mass.x() + _side);
       }
 
       // wrapping in y direction
       if (new_cell._y >= curr_cell._y + cell_side * 2) {
-        new_cell._center_of_mass_y -= _side;
+        new_cell._mass.y(new_cell._mass.y() - _side);
       } else if (new_cell._y < curr_cell._y - cell_side) {
-        new_cell._center_of_mass_y += _side;
+        new_cell._mass.y(new_cell._mass.y() + _side);
       }
 
       adjacent_cells.push_back(new_cell);
@@ -94,16 +105,8 @@ void Grid::update_cells() {
     }
   }
 
-  for (auto &c : _cells) {
-    c.finish_update();
-  }
-}
-
-void Grid::print_cells() const {
-  for (long i = 0; i < _cells.size(); i++) {
-    std::cout << "Cell " << i << std::endl;
-    _cells[i].print_particles();
-    std::cout << std::endl;
+  for (auto &p : _cells) {
+    p.second.finish_update();
   }
 }
 
@@ -111,8 +114,8 @@ Particle Grid::get_first_particle() const { return _first_particle; }
 
 long Grid::get_collisions() {
   long total = 0;
-  for (const auto &c : _cells) {
-    total += c._collisions;
+  for (const auto &p : _cells) {
+    total += p.second._collisions;
   }
   return total;
 }
