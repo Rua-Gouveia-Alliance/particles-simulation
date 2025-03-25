@@ -2,13 +2,12 @@
 #include "Grid.hpp"
 #include "Particle.hpp"
 #define _USE_MATH_DEFINES
+#include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <mpi.h>
 #include <omp.h>
 #include <vector>
-#include <mpi.h>
-#include <algorithm> // for std::min
-
 
 unsigned int seed;
 
@@ -32,10 +31,12 @@ double rnd_normal01() {
   } while (result < 0 || result >= 1);
   return result;
 }
-void compute_grid_partition(long ncside, int size, int rank, long &start_row, long &end_row) {
+void compute_grid_partition(long ncside, int size, int rank, long &start_row,
+                            long &end_row) {
   long rows_per_proc = ncside / size;
   long extra_rows = ncside % size;
-  start_row = rank * rows_per_proc + std::min(static_cast<long>(rank), extra_rows);
+  start_row =
+      rank * rows_per_proc + std::min(static_cast<long>(rank), extra_rows);
   end_row = start_row + rows_per_proc + (rank < extra_rows ? 1 : 0);
 }
 
@@ -53,8 +54,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   local_par.clear();
 
   long start_row, end_row;
-  compute_grid_partition(ncside, size, rank,start_row, end_row);
-
+  compute_grid_partition(ncside, size, rank, start_row, end_row);
 
   /*for (i = 0; i < n_part; i++) {
     par[i]._x = rnd01() * side;
@@ -70,46 +70,44 @@ void init_particles(long seed, double side, long ncside, long long n_part,
 
   double y_min = start_row * cell_size;
   double y_max = end_row * cell_size;
-  for(i = 0; i < n_part; i++)
-  {
+  for (i = 0; i < n_part; i++) {
     double x = rnd01() * side;
     double y = rnd01() * side;
-    if(y >= y_min && y < y_max){
+    if (y >= y_min && y < y_max) {
       Particle p;
       p._x = x;
       p._y = y;
       p._vx = (rnd01() - 0.5) * side / ncside / 5.0;
       p._vy = (rnd01() - 0.5) * side / ncside / 5.0;
       p._m = rnd01() * 0.01 * (ncside * ncside) / n_part / G * EPSILON2;
-      if(i == 0){
+      if (i == 0) {
         p._first_particle = true;
       }
       local_par.push_back(p);
+    }
   }
-  
 }
-      }
 
-Grid init_grid(double side, long ncside, std::vector<Particle> &pv, int rank, int size) {
+Grid init_grid(double side, long ncside, std::vector<Particle> &pv, int rank,
+               int size) {
+
   long start_row, end_row;
-  compute_grid_partition(ncside, size, rank,start_row, end_row);
+  compute_grid_partition(ncside, size, rank, start_row, end_row);
 
   double cell_size = side / ncside;
-  
-  
+
   Grid local_grid(side, ncside);
 
-
   // create cells
- /* for (long i = 0; i < ncside; i++) {
-    double y = i * cell_size;
-    for (long j = 0; j < ncside; j++) {
-      double x = j * cell_size;
+  /* for (long i = 0; i < ncside; i++) {
+     double y = i * cell_size;
+     for (long j = 0; j < ncside; j++) {
+       double x = j * cell_size;
 
-      Cell cell(x, y, cell_size, rank);
-      grid.add_cell(cell);
-    }
-  }*/
+       Cell cell(x, y, cell_size, rank);
+       grid.add_cell(cell);
+     }
+   }*/
   for (long i = start_row; i < end_row; i++) {
     double y = i * cell_size;
     for (long j = 0; j < ncside; j++) {
@@ -125,11 +123,10 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv, int rank, in
     long cell_x = static_cast<long>(p._x / cell_size);
     long cell_y = static_cast<long>(p._y / cell_size);
 
-    if(cell_y >= start_row && cell_y < end_row)
-    {
-    long cell_idx = cell_x + (cell_y - start_row) * ncside;
-    local_grid._cells[cell_idx].add_particle(p);
-  }
+    if (cell_y >= start_row && cell_y < end_row) {
+      long cell_idx = cell_x + (cell_y - start_row) * ncside;
+      local_grid._cells[cell_idx].add_particle(p);
+    }
   }
 
   // initialize cell
@@ -158,8 +155,8 @@ void print_result(Grid &g) {
 
 int main(int argc, char *argv[]) {
   double exec_time;
-  MPI_Init (&argc, &argv); //init
-  
+  MPI_Init(&argc, &argv); // init
+
   std::vector<Particle> local_par;
   int rank, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
