@@ -77,7 +77,7 @@ std::vector<CellLocation> partition_grid(long nprocs, long ncside,
 PartialGrid init_grid(long rank, long nprocs, double side, long ncside,
                       std::vector<Particle> &pv) {
 
-  PartialGrid grid(side, ncside);
+  PartialGrid grid(rank, side, ncside);
   double cell_size = side / ncside;
   std::vector<CellLocation> partition =
       partition_grid(nprocs, ncside, cell_size);
@@ -163,10 +163,13 @@ int main(int argc, char *argv[]) {
     PartialGrid grid = init_grid(rank, nprocs, side, ncside, particles);
     for (long long ll = 0; ll < time_steps; ll++)
       grid.update();
+    grid.sync_first_particle();
     exec_time += omp_get_wtime();
 
-    fprintf(stderr, "%.1fs\n", exec_time);
-    print_result(grid); // to stdout
+    if (rank == 0) {
+      fprintf(stderr, "%.1fs\n", exec_time);
+      print_result(grid); // to stdout
+    }
   } catch (const std::exception &e) {
     std::cerr << "Error: Invalid input." << e.what() << "\n";
     MPI_Finalize();

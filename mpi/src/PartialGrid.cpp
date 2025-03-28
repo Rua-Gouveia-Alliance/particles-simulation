@@ -157,6 +157,16 @@ void PartialGrid::update() {
   // MPI_WAIT_ALL(_adjacent_ranks);
 }
 
+void PartialGrid::sync_first_particle() {
+  if (_rank == 0) {
+    if (&_first_particle != &_default_first_particle)
+      return;
+    // _first_particle = MPI_RECV(ANY_RANK);
+  } else if (&_first_particle != &_default_first_particle) {
+    // MPI_SEND(0);
+  }
+}
+
 void PartialGrid::print_cells() const {
   for (const auto &it : local_cells) {
     std::cout << "Cell " << it.second.id() << std::endl;
