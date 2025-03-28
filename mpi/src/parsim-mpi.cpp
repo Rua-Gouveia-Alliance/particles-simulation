@@ -1,7 +1,10 @@
 #include "Cell.hpp"
-#include "Grid.hpp"
+#include "CellLocation.hpp"
+#include "PartialCell.hpp"
+#include "PartialGrid.hpp"
 #include "Particle.hpp"
 #define _USE_MATH_DEFINES
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <omp.h>
@@ -54,16 +57,56 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par[0].first_particle = true;
 }
 
-Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
-  Grid grid(side, ncside);
-  double cell_size = side / ncside;
+std::vector<CellLocation> partition_grid(long nprocs, long ncside,
+                                         double cell_size) {
+  std::vector<CellLocation> partition;
+  partition.reserve(ncside * ncside);
 
-  for (long i = 0; i < ncside; i++) {
+  for (long i = 0; i < ncside; ++i) {
     double y = i * cell_size;
-    for (long j = 0; j < ncside; j++) {
+    for (long j = 0; j < ncside; ++j) {
       double x = j * cell_size;
-      Cell cell(x, y, cell_size);
-      grid.add_cell(cell);
+      partition.push_back(CellLocation(x, y, i % nprocs));
+    }
+  }
+
+  return partition;
+}
+
+// TODO: this can probably be optimized
+PartialGrid init_grid(long rank, long nprocs, double side, long ncside,
+                      std::vector<Particle> &pv) {
+
+  PartialGrid grid(side, ncside);
+  double cell_size = side / ncside;
+  std::vector<CellLocation> partition =
+      partition_grid(nprocs, ncside, cell_size);
+
+  std::vector<long> grid_adj;
+  std::vector<bool> grid_ranks = std::vector<bool>(nprocs, false);
+  for (long i = 0; i < partition.size(); ++i) {
+    std::vector<long> adj;
+    CellLocation &loc = partition[i];
+    std::vector<bool> ranks = std::vector<bool>(nprocs, false);
+    std::vector<long> adj_cells = PartialGrid::get_adjacent_cells(i, ncside);
+
+    adj.reserve(adj_cells.size());
+    for (const auto &id : adj_cells) {
+      if (!ranks[partition[id].rank]) {
+        ranks[partition[id].rank] = true;
+        adj.push_back(partition[id].rank);
+      }
+      if (!grid_ranks[partition[id].rank]) {
+        grid_ranks[partition[id].rank] = true;
+        grid_adj.push_back(partition[id].rank);
+      }
+    }
+
+    if (loc.rank == rank) {
+      grid.add_local_cell(Cell(loc.rank, adj, loc.x, loc.y, cell_size));
+    } else if (std::find(adj.begin(), adj.end(), rank) != adj.end()) {
+      grid.add_adjacent_cell(
+          PartialCell(loc.rank, loc.rank, loc.x, loc.y, cell_size));
     }
   }
 
@@ -71,26 +114,20 @@ Grid init_grid(double side, long ncside, std::vector<Particle> &pv) {
   for (auto &p : pv) {
     long cell_x = static_cast<long>(p.x / cell_size);
     long cell_y = static_cast<long>(p.y / cell_size);
-
     long cell_idx = cell_x + cell_y * ncside;
-    grid._cells[cell_idx].add_particle(p);
+    if (partition[cell_idx].rank == rank)
+      grid.local_cells[cell_idx].add_particle(p);
   }
 
   // initialize cell
-  for (auto &c : grid._cells) {
-    c.finish_update();
+  for (auto &it : grid.local_cells) {
+    it.second.finish_update();
   }
 
   return grid;
 }
 
-void simulation(Grid &grid, long long time_steps) {
-  for (long long ll = 0; ll < time_steps; ll++) {
-    grid.update_cells();
-  }
-}
-
-void print_result(Grid &g) {
+void print_result(PartialGrid &g) {
   Particle pf = g.get_first_particle();
   fprintf(stdout, "%.3f %.3f\n", pf.x, pf.y);
 
@@ -100,10 +137,16 @@ void print_result(Grid &g) {
 int main(int argc, char *argv[]) {
   double exec_time;
   std::vector<Particle> particles;
+  long rank, nprocs;
+
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (argc != 6) {
     std::cerr << "Usage: " << argv[0]
               << " <seed> <side> <ncside> <n_part> <time_steps>\n";
+    MPI_Finalize();
     return 1;
   }
 
@@ -117,17 +160,19 @@ int main(int argc, char *argv[]) {
     init_particles(seed, side, ncside, n_part, particles);
 
     exec_time = -omp_get_wtime();
-    Grid grid = init_grid(side, ncside, particles);
-
-    simulation(grid, time_steps);
+    PartialGrid grid = init_grid(rank, nprocs, side, ncside, particles);
+    for (long long ll = 0; ll < time_steps; ll++)
+      grid.update();
     exec_time += omp_get_wtime();
 
     fprintf(stderr, "%.1fs\n", exec_time);
     print_result(grid); // to stdout
   } catch (const std::exception &e) {
     std::cerr << "Error: Invalid input." << e.what() << "\n";
+    MPI_Finalize();
     return 1;
   }
 
+  MPI_Finalize();
   return 0;
 }

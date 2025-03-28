@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <mpi.h>
 #include <omp.h>
 
 std::vector<long> PartialGrid::get_adjacent_cells(long ci, long ncside) {
