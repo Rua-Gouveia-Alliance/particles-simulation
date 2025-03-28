@@ -1,41 +1,41 @@
-#ifndef __CELL_HPP__
-#define __CELL_HPP__
+#pragma once
+
+#include "Mass.hpp"
+#include "PartialCell.hpp"
+#include "Particle.hpp"
+#include <unordered_map>
+#include <vector>
 
 #define G 6.67408e-11
 #define EPSILON2 (0.005 * 0.005)
 #define DELTAT 0.1
 
-#include "Mass.hpp"
-#include "Particle.hpp"
-#include <vector>
-
 class Cell {
 private:
+  int _id;
+  std::vector<int> _adjacent_ranks;
   std::vector<Particle> _particles;
   std::vector<Particle> _temp_particles;
 
-  void _update_mass();
-  void _update_center_of_mass();
   void _check_collisions();
 
 public:
-  Mass _mass;
-  long _collisions = 0;
-  double _x, _y, _side;
+  Mass mass;
+  long collisions = 0;
+  double x, y, side;
 
-  Cell(long id, double x, double y, double side);
+  Cell(int id, std::vector<int> &adjacent_ranks, double x, double y,
+       double side)
+      : _id(id), _adjacent_ranks(adjacent_ranks), x(x), y(y), side(side),
+        mass(id){};
 
+  void update_mass();
   void add_particle(Particle &p);
   std::vector<Particle>
-  update_particles(const std::vector<Cell> &adjacent_cells);
+  update_particles(const std::unordered_map<int, PartialCell> &adjacent_cells);
   void finish_update();
   void print_particles() const;
 
-  long id() const;
-  double get_center_of_mass_x() const;
-  double get_center_of_mass_y() const;
-  double get_cell_mass() const;
-  const std::vector<Particle> &get_particles();
+  int id() const { return _id; }
+  const std::vector<Particle> &get_particles() const;
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __MASS_HPP__
-#define __MASS_HPP__
+#pragma once
 
 class Mass {
 private:
@@ -21,5 +20,3 @@ public:
   void y(double y) { _y = y; }
   void val(double val) { _val = val; }
 };
-
-#endif
