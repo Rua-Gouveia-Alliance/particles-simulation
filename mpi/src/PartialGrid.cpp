@@ -40,16 +40,16 @@ std::vector<Mass> PartialGrid::_get_adjacent_masses(Cell &cell) {
 
     // wrapping in x direction
     if (adjacent_cell.x >= cell.x + side * 2) {
-      mass.x(mass.x() - side);
+      mass.x = mass.x - side;
     } else if (adjacent_cell.x < cell.x - side) {
-      mass.x(mass.x() + side);
+      mass.x = mass.x + side;
     }
 
     // wrapping in y direction
     if (adjacent_cell.y >= cell.y + side * 2) {
-      mass.y(mass.y() - side);
+      mass.y = mass.y - side;
     } else if (adjacent_cell.y < cell.y - side) {
-      mass.y(mass.y() + side);
+      mass.y = mass.y + side;
     }
 
     adjacent_masses.push_back(mass);

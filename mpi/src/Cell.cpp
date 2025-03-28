@@ -14,14 +14,14 @@ void Cell::update_mass() {
   for (const auto &p : _particles) {
     total += p.m;
   }
-  mass.val(total);
+  mass.val = total;
 
   double x_res = 0;
   double y_res = 0;
 
-  if (mass.val() == 0) {
-    mass.x(-1);
-    mass.y(-1);
+  if (mass.val == 0) {
+    mass.x = -1;
+    mass.y = -1;
     return;
   }
 
@@ -30,8 +30,8 @@ void Cell::update_mass() {
     y_res += p.m * p.y;
   }
 
-  mass.x(x_res / mass.val());
-  mass.x(y_res / mass.val());
+  mass.x = x_res / mass.val;
+  mass.y = y_res / mass.val;
 }
 
 void Cell::_check_collisions() {
@@ -107,14 +107,14 @@ std::vector<Particle> Cell::update_particles(
 
     // calculate resulting force for adjacent cells
     for (const auto &it : adjacent_cells) {
-      if (it.second.mass.val() == 0)
+      if (it.second.mass.val == 0)
         continue;
 
-      dx = it.second.mass.x() - pi.x;
-      dy = it.second.mass.y() - pi.y;
+      dx = it.second.mass.x - pi.x;
+      dy = it.second.mass.y - pi.y;
       distance_sq = dx * dx + dy * dy;
 
-      force = Gm_i * it.second.mass.val();
+      force = Gm_i * it.second.mass.val;
       force /= distance_sq;
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
@@ -123,7 +123,7 @@ std::vector<Particle> Cell::update_particles(
     }
 
     // calculate new acceleration, velocity, position
-    new_particle = Particle(pi.m);
+    new_particle = {.m = pi.m};
 
     ax = forces[i].first / pi.m;
     ay = forces[i].second / pi.m;
@@ -151,10 +151,11 @@ void Cell::finish_update() {
 
 void Cell::print_particles() const {
   for (const auto &p : _particles) {
-    p.print_info();
+    std::cout << "x: " << p.x << "\ty: " << p.y << "\tvx: " << p.vx
+              << "\tvy: " << p.vy << "\tm: " << p.m << std::endl;
   }
-  std::cout << "Center of Mass: " << mass.x() << ", " << mass.y() << std::endl;
-  std::cout << "Mass: " << mass.val() << std::endl;
+  std::cout << "Center of Mass: " << mass.x << ", " << mass.y << std::endl;
+  std::cout << "Mass: " << mass.val << std::endl;
 }
 
 const std::vector<Particle> &Cell::get_particles() const { return _particles; }

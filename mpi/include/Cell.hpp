@@ -27,7 +27,7 @@ public:
   Cell(long id, std::vector<long> &adjacent_ranks, double x, double y,
        double side)
       : _id(id), _adjacent_ranks(adjacent_ranks), x(x), y(y), side(side),
-        mass(id){};
+        mass({id, -1, -1, 0}){};
 
   void update_mass();
   void add_particle(Particle &p);
