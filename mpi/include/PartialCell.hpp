@@ -6,7 +6,7 @@
 
 class PartialCell {
 private:
-  int _id;
+  int _id; // n devia ser long?
   int _owner;
   std::vector<Particle> _particles;
 
