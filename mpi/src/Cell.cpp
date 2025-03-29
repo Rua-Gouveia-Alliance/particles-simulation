@@ -32,6 +32,7 @@ void Cell::update_mass() {
 
   mass.x = x_res / mass.val;
   mass.y = y_res / mass.val;
+  mass.id = this->id(); //
 }
 
 void Cell::_check_collisions() {
