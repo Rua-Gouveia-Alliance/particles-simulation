@@ -270,7 +270,7 @@ void PartialGrid::sync_final_state() {
     MPI_Status status;
     final_state_t state;
 
-    for (int i = 1; i < _max_rank; ++i) {
+    for (int i = 1; i < _max_rank + 1; ++i) {
       MPI_Recv(&state, 1, mpi_final_state_t, i, FINAL_STATE, MPI_COMM_WORLD,
                &status);
       _remote_collisions += state.collisions;
