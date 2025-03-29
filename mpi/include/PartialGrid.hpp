@@ -9,7 +9,7 @@
 
 class PartialGrid {
 private:
-  long _rank;
+  int _rank;
   double _side;
   long _ncside;
   Particle &_first_particle;
@@ -26,13 +26,15 @@ public:
   std::unordered_map<int, PartialCell> adjacent_cells;
   std::unordered_map<int, Cell> local_cells;
 
-  PartialGrid(long rank, double side, long ncside)
+  PartialGrid(int rank, double side, long ncside)
       : _rank(rank), _side(side), _ncside(ncside),
         _first_particle(_default_first_particle) {}
 
   static std::vector<long> get_adjacent_cells(long ci, long ncside);
-  void add_local_cell(Cell cell) { local_cells[cell.id()] = cell; }
-  void add_adjacent_cell(PartialCell cell) { adjacent_cells[cell.id()] = cell; }
+  void add_local_cell(Cell cell) { local_cells.emplace(cell.id(), cell); }
+  void add_adjacent_cell(PartialCell cell) {
+    adjacent_cells.emplace(cell.id(), cell);
+  }
   void add_adjacent_rank(long rank) { _adjacent_ranks.push_back(rank); }
 
   void update();

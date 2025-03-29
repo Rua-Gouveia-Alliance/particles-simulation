@@ -13,7 +13,7 @@
 class Cell {
 private:
   long _id;
-  std::vector<long> _adjacent_ranks;
+  std::vector<int> _adjacent_ranks;
   std::vector<Particle> _particles;
   std::vector<Particle> _temp_particles;
 
@@ -24,7 +24,7 @@ public:
   long collisions = 0;
   double x, y, side;
 
-  Cell(long id, std::vector<long> &adjacent_ranks, double x, double y,
+  Cell(long id, std::vector<int> &adjacent_ranks, double x, double y,
        double side)
       : _id(id), _adjacent_ranks(adjacent_ranks), x(x), y(y), side(side),
         mass({id, -1, -1, 0}){};

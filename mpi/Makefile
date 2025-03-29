@@ -1,4 +1,3 @@
-CXX ?= g++
 TARGET_EXEC ?= parsim
 
 # paths
@@ -21,12 +20,12 @@ LDFLAGS ?= -fopenmp
 
 # final target
 $(TARGET_EXEC): $(OBJS)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
+	mpic++ $(OBJS) -o $@ $(LDFLAGS)
 
 # build all dependencies
 $(BIN_PATH)/%.cpp.o: %.cpp
 	mkdir -p $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	mpic++ $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	$(RM) -r $(BUILD_PATH)

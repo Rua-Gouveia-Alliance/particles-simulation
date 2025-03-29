@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <mpi.h>
 #include <omp.h>
 #include <vector>
 
@@ -74,7 +75,7 @@ std::vector<CellLocation> partition_grid(long nprocs, long ncside,
 }
 
 // TODO: this can probably be optimized
-PartialGrid init_grid(long rank, long nprocs, double side, long ncside,
+PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
                       std::vector<Particle> &pv) {
 
   PartialGrid grid(rank, side, ncside);
@@ -82,10 +83,10 @@ PartialGrid init_grid(long rank, long nprocs, double side, long ncside,
   std::vector<CellLocation> partition =
       partition_grid(nprocs, ncside, cell_size);
 
-  std::vector<long> grid_adj;
+  std::vector<int> grid_adj;
   std::vector<bool> grid_ranks = std::vector<bool>(nprocs, false);
   for (long i = 0; i < partition.size(); ++i) {
-    std::vector<long> adj;
+    std::vector<int> adj;
     CellLocation &loc = partition[i];
     std::vector<bool> ranks = std::vector<bool>(nprocs, false);
     std::vector<long> adj_cells = PartialGrid::get_adjacent_cells(i, ncside);
@@ -116,7 +117,7 @@ PartialGrid init_grid(long rank, long nprocs, double side, long ncside,
     long cell_y = static_cast<long>(p.y / cell_size);
     long cell_idx = cell_x + cell_y * ncside;
     if (partition[cell_idx].rank == rank)
-      grid.local_cells[cell_idx].add_particle(p);
+      grid.local_cells.at(cell_idx).add_particle(p);
   }
 
   // initialize cell
@@ -137,7 +138,7 @@ void print_result(PartialGrid &g) {
 int main(int argc, char *argv[]) {
   double exec_time;
   std::vector<Particle> particles;
-  long rank, nprocs;
+  int rank, nprocs;
 
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &nprocs);

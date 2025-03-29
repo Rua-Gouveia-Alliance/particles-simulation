@@ -35,8 +35,8 @@ std::vector<Mass> PartialGrid::_get_adjacent_masses(Cell &cell) {
   std::vector<Mass> adjacent_masses;
 
   for (long i : adjacent_idx) {
-    PartialCell &adjacent_cell = adjacent_cells[i];
-    Mass &mass = adjacent_cells[i].mass;
+    PartialCell &adjacent_cell = adjacent_cells.at(i);
+    Mass &mass = adjacent_cell.mass;
 
     // wrapping in x direction
     if (adjacent_cell.x >= cell.x + side * 2) {
@@ -88,9 +88,9 @@ long PartialGrid::_get_particle_index(Particle &p) {
 void PartialGrid::_add_particle_to_cell(Particle &p) {
   long cell_idx = _get_particle_index(p);
   if (local_cells.find(cell_idx) != local_cells.end()) {
-    local_cells[cell_idx].add_particle(p);
+    local_cells.at(cell_idx).add_particle(p);
   } else {
-    adjacent_cells[cell_idx].add_particle(p);
+    adjacent_cells.at(cell_idx).add_particle(p);
   }
 }
 
