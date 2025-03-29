@@ -145,8 +145,10 @@ int main(int argc, char *argv[]) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (argc != 6) {
-    std::cerr << "Usage: " << argv[0]
-              << " <seed> <side> <ncside> <n_part> <time_steps>\n";
+    if (rank == 0) {
+      std::cerr << "Usage: " << argv[0]
+                << " <seed> <side> <ncside> <n_part> <time_steps>\n";
+    }
     MPI_Finalize();
     return 1;
   }
@@ -172,7 +174,9 @@ int main(int argc, char *argv[]) {
       print_result(grid); // to stdout
     }
   } catch (const std::exception &e) {
-    std::cerr << "Error: Invalid input." << e.what() << "\n";
+    if (rank == 0) {
+      std::cerr << "Error: Invalid input." << e.what() << "\n";
+    }
     MPI_Finalize();
     return 1;
   }
