@@ -32,7 +32,7 @@ public:
   void update_mass();
   void add_particle(Particle &p);
   std::vector<Particle>
-  update_particles(const std::unordered_map<int, PartialCell> &adjacent_cells);
+  update_particles(const std::vector<Mass> &adjacent_masses);
   void finish_update();
   void print_particles() const;
 

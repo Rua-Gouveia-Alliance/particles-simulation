@@ -58,7 +58,7 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par[0].first_particle = true;
 }
 
-std::vector<CellLocation> partition_grid(long nprocs, long ncside,
+std::vector<CellLocation> partition_grid(int nprocs, long ncside,
                                          double cell_size) {
   std::vector<CellLocation> partition;
   partition.reserve(ncside * ncside);
@@ -77,8 +77,7 @@ std::vector<CellLocation> partition_grid(long nprocs, long ncside,
 // TODO: this can probably be optimized
 PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
                       std::vector<Particle> &pv) {
-
-  PartialGrid grid(rank, side, ncside);
+  PartialGrid grid(rank, ncside - 1, side, ncside);
   double cell_size = side / ncside;
   std::vector<CellLocation> partition =
       partition_grid(nprocs, ncside, cell_size);
@@ -86,12 +85,18 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
   std::vector<bool> grid_ranks = std::vector<bool>(nprocs, false);
   for (long i = 0; i < partition.size(); ++i) {
     std::vector<int> adj;
+    bool owner_is_adjacent = false;
     CellLocation &loc = partition[i];
     std::vector<bool> ranks = std::vector<bool>(nprocs, false);
     std::vector<long> adj_cells = PartialGrid::get_adjacent_cells(i, ncside);
 
     adj.reserve(adj_cells.size());
     for (const auto &id : adj_cells) {
+      if (partition[id].rank == rank) {
+        owner_is_adjacent = true;
+        continue;
+      }
+
       if (!ranks[partition[id].rank]) {
         ranks[partition[id].rank] = true;
         adj.push_back(partition[id].rank);
@@ -100,14 +105,16 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
         grid_ranks[partition[id].rank] = true;
         grid.add_adjacent_rank(partition[id].rank);
       }
-      grid.increment_adjacent_rank(partition[id].rank);
+      if (!partition[id].counted) {
+        partition[id].counted = true;
+        grid.increment_adjacent_rank(partition[id].rank);
+      }
     }
 
     if (loc.rank == rank) {
-      grid.add_local_cell(Cell(loc.rank, adj, loc.x, loc.y, cell_size));
-    } else if (std::find(adj.begin(), adj.end(), rank) != adj.end()) {
-      grid.add_adjacent_cell(
-          PartialCell(loc.rank, loc.rank, loc.x, loc.y, cell_size));
+      grid.add_local_cell(Cell(i, adj, loc.x, loc.y, cell_size));
+    } else if (owner_is_adjacent) {
+      grid.add_adjacent_cell(PartialCell(i, loc.rank, loc.x, loc.y, cell_size));
     }
   }
 
@@ -160,13 +167,18 @@ int main(int argc, char *argv[]) {
     long long n_part = std::stoll(argv[4]);
     long long time_steps = std::stoll(argv[5]);
 
+    if (rank > ncside - 1) {
+      MPI_Finalize();
+      return 0;
+    }
+
     init_particles(seed, side, ncside, n_part, particles);
 
     exec_time = -omp_get_wtime();
     PartialGrid grid = init_grid(rank, nprocs, side, ncside, particles);
     for (long long ll = 0; ll < time_steps; ll++)
       grid.update();
-    grid.sync_first_particle();
+    grid.sync_final_state();
     exec_time += omp_get_wtime();
 
     if (rank == 0) {
@@ -174,9 +186,8 @@ int main(int argc, char *argv[]) {
       print_result(grid); // to stdout
     }
   } catch (const std::exception &e) {
-    if (rank == 0) {
-      std::cerr << "Error: Invalid input." << e.what() << "\n";
-    }
+    std::cerr << "Rank: " << rank << "\n";
+    std::cerr << "Error: " << e.what() << "\n";
     MPI_Finalize();
     return 1;
   }

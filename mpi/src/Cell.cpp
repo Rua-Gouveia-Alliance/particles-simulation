@@ -1,4 +1,5 @@
 #include "Cell.hpp"
+#include "Mass.hpp"
 #include "Particle.hpp"
 
 #include <algorithm>
@@ -71,8 +72,8 @@ void Cell::_check_collisions() {
 
 void Cell::add_particle(Particle &p) { _temp_particles.push_back(p); }
 
-std::vector<Particle> Cell::update_particles(
-    const std::unordered_map<int, PartialCell> &adjacent_cells) {
+std::vector<Particle>
+Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
   Particle new_particle;
   std::vector<Particle> new_particles;
   std::vector<std::pair<double, double>> forces(_particles.size(), {0.0, 0.0});
@@ -106,15 +107,15 @@ std::vector<Particle> Cell::update_particles(
     }
 
     // calculate resulting force for adjacent cells
-    for (const auto &it : adjacent_cells) {
-      if (it.second.mass.val == 0)
+    for (const auto &mass : adjacent_masses) {
+      if (mass.val == 0)
         continue;
 
-      dx = it.second.mass.x - pi.x;
-      dy = it.second.mass.y - pi.y;
+      dx = mass.x - pi.x;
+      dy = mass.y - pi.y;
       distance_sq = dx * dx + dy * dy;
 
-      force = Gm_i * it.second.mass.val;
+      force = Gm_i * mass.val;
       force /= distance_sq;
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
