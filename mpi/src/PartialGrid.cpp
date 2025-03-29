@@ -6,6 +6,35 @@
 #include <iterator>
 #include <mpi.h>
 #include <omp.h>
+#include <stddef.h>
+
+#define FIRST_PARTICLE 1
+
+PartialGrid::PartialGrid(int rank, double side, long ncside)
+    : _rank(rank), _side(side), _ncside(ncside),
+      _first_particle(_default_first_particle) {
+
+  int m_count = 4;
+  int m_blocklengths[4] = {1, 1, 1, 1};
+  MPI_Datatype m_types[4] = {MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE};
+  MPI_Aint m_displacements[4] = {offsetof(Mass, id), offsetof(Mass, x),
+                                 offsetof(Mass, y), offsetof(Mass, val)};
+  MPI_Type_create_struct(m_count, m_blocklengths, m_displacements, m_types,
+                         &mpi_mass_t);
+  MPI_Type_commit(&mpi_mass_t);
+
+  int p_count = 6;
+  int p_blocklengths[6] = {1, 1, 1, 1, 1, 1};
+  MPI_Datatype p_types[6] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
+                             MPI_DOUBLE, MPI_DOUBLE, MPI_C_BOOL};
+  MPI_Aint p_displacements[6] = {
+      offsetof(Particle, x),  offsetof(Particle, y),
+      offsetof(Particle, vx), offsetof(Particle, vy),
+      offsetof(Particle, m),  offsetof(Particle, first_particle)};
+  MPI_Type_create_struct(p_count, p_blocklengths, p_displacements, p_types,
+                         &mpi_particle_t);
+  MPI_Type_commit(&mpi_particle_t);
+}
 
 std::vector<long> PartialGrid::get_adjacent_cells(long ci, long ncside) {
   std::vector<long> adjacent;
@@ -161,10 +190,17 @@ void PartialGrid::sync_first_particle() {
   if (_rank == 0) {
     if (&_first_particle != &_default_first_particle)
       return;
-    // _first_particle = MPI_RECV(ANY_RANK);
+
+    MPI_Status status;
+    MPI_Recv(&_first_particle, 1, mpi_particle_t, MPI_ANY_SOURCE,
+             FIRST_PARTICLE, MPI_COMM_WORLD, &status);
   } else if (&_first_particle != &_default_first_particle) {
-    // MPI_SEND(0);
+    MPI_Send(&_first_particle, 1, mpi_particle_t, 0, FIRST_PARTICLE,
+             MPI_COMM_WORLD);
   }
+
+  MPI_Type_free(&mpi_mass_t);
+  MPI_Type_free(&mpi_particle_t);
 }
 
 void PartialGrid::print_cells() const {

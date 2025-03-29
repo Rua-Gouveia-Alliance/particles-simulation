@@ -4,6 +4,7 @@
 #include "Mass.hpp"
 #include "PartialCell.hpp"
 #include "Particle.hpp"
+#include <mpi.h>
 #include <unordered_map>
 #include <vector>
 
@@ -15,6 +16,8 @@ private:
   Particle &_first_particle;
   Particle _default_first_particle = Particle();
   std::vector<int> _adjacent_ranks;
+  MPI_Datatype mpi_mass_t;
+  MPI_Datatype mpi_particle_t;
 
   std::vector<Mass> _get_adjacent_masses(Cell &cell);
   long _get_particle_index(Particle &p);
@@ -26,9 +29,7 @@ public:
   std::unordered_map<int, PartialCell> adjacent_cells;
   std::unordered_map<int, Cell> local_cells;
 
-  PartialGrid(int rank, double side, long ncside)
-      : _rank(rank), _side(side), _ncside(ncside),
-        _first_particle(_default_first_particle) {}
+  PartialGrid(int rank, double side, long ncside);
 
   static std::vector<long> get_adjacent_cells(long ci, long ncside);
   void add_local_cell(Cell cell) { local_cells.emplace(cell.id(), cell); }

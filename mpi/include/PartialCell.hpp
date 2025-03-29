@@ -6,7 +6,7 @@
 
 class PartialCell {
 private:
-  int _id; // n devia ser long?
+  long _id;
   int _owner;
   std::vector<Particle> _particles;
 
@@ -14,7 +14,7 @@ public:
   Mass mass;
   double x, y, side;
 
-  PartialCell(int id, int owner, double x, double y, double side)
+  PartialCell(long id, int owner, double x, double y, double side)
       : _id(id), _owner(owner), x(x), y(y), side(side), mass({id, -1, -1, 0}){};
 
   void add_particle(Particle &p) { _particles.push_back(p); }
