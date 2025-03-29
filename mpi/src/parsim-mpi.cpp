@@ -10,7 +10,6 @@
 #include <mpi.h>
 #include <omp.h>
 #include <vector>
-#include <mpi>
 
 unsigned int seed;
 
