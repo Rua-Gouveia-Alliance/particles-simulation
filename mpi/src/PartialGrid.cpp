@@ -7,8 +7,11 @@
 #include <mpi.h>
 #include <omp.h>
 #include <stddef.h>
+#include <unordered_map>
+#include <vector>
 
 #define FIRST_PARTICLE 1
+#define MASS_UPDATE 2
 
 PartialGrid::PartialGrid(int rank, double side, long ncside)
     : _rank(rank), _side(side), _ncside(ncside),
@@ -154,21 +157,42 @@ void PartialGrid::_update_local_cells() {
 }
 
 void PartialGrid::update() {
+  long size = _adjacent_ranks.size();
+  std::vector<MPI_Request> requests(size * 2);
+  std::vector<std::vector<Mass>> masses;
+  masses.reserve(size);
 
-  // for (const auto &id : _adjacent_ranks) {
-  //   Mass mass = MPI_RECV_I(id);
-  //   _adjacent_cells[mass.id()] = PartialCell(id, mass);
-  // }
+  long i = 0;
+  for (const auto &it : _adjacent_ranks) {
+    int rank = it.first;
+    long element_count = it.second;
+    masses.push_back(std::vector<Mass>(element_count));
+    MPI_Irecv(masses.back().data(), element_count, mpi_mass_t, rank,
+              MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
+  }
 
   _update_local_masses();
 
-  // for (const auto &it : _local_cells) {
-  //   for (const auto& id : it.second.adjacent_ranks) {
-  //       MPI_SEND_I(it.second.mass, id);
-  //   }
-  // }
+  std::unordered_map<int, std::vector<Mass>> updates;
+  updates.reserve(size);
+  for (const auto &it : local_cells) {
+    for (const auto &id : it.second.adjacent_ranks) {
+      updates[id].push_back(it.second.mass);
+    }
+  }
 
-  // WAIT(_adjacent_cells);
+  for (auto &it : updates) {
+    MPI_Isend(it.second.data(), it.second.size(), mpi_mass_t, it.first,
+              MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
+  }
+
+  std::vector<MPI_Status> statuses(size * 2);
+  MPI_Waitall(size * 2, requests.data(), statuses.data());
+  for (const auto &array : masses) {
+    for (const auto &mass : array) {
+      adjacent_cells.at(mass.id).mass = mass;
+    }
+  }
 
   _update_local_cells();
 

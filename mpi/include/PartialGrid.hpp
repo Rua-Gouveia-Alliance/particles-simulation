@@ -15,7 +15,7 @@ private:
   long _ncside;
   Particle &_first_particle;
   Particle _default_first_particle = Particle();
-  std::vector<int> _adjacent_ranks;
+  std::unordered_map<int, long> _adjacent_ranks;
   MPI_Datatype mpi_mass_t;
   MPI_Datatype mpi_particle_t;
 
@@ -36,7 +36,8 @@ public:
   void add_adjacent_cell(PartialCell cell) {
     adjacent_cells.emplace(cell.id(), cell);
   }
-  void add_adjacent_rank(long rank) { _adjacent_ranks.push_back(rank); }
+  void add_adjacent_rank(int rank) { _adjacent_ranks.emplace(rank, 0); }
+  void increment_adjacent_rank(int rank) { ++_adjacent_ranks.at(rank); }
 
   void update();
   void sync_first_particle();

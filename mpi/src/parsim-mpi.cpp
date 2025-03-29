@@ -83,7 +83,6 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
   std::vector<CellLocation> partition =
       partition_grid(nprocs, ncside, cell_size);
 
-  std::vector<int> grid_adj;
   std::vector<bool> grid_ranks = std::vector<bool>(nprocs, false);
   for (long i = 0; i < partition.size(); ++i) {
     std::vector<int> adj;
@@ -99,8 +98,9 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
       }
       if (!grid_ranks[partition[id].rank]) {
         grid_ranks[partition[id].rank] = true;
-        grid_adj.push_back(partition[id].rank);
+        grid.add_adjacent_rank(partition[id].rank);
       }
+      grid.increment_adjacent_rank(partition[id].rank);
     }
 
     if (loc.rank == rank) {
