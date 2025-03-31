@@ -242,8 +242,14 @@ void PartialGrid::update() {
     MPI_Recv(particles.data(), count, mpi_particle_t, it.first, PARTICLE_UPDATE,
              MPI_COMM_WORLD, &status);
 
-    for (auto &p : particles)
-      _add_particle_to_cell(p);
+    for (auto &p : particles) {
+      long idx = _get_particle_index(p);
+      local_cells.at(idx).add_updated_particle(p);
+    }
+  }
+
+  for (auto &it : local_cells) {
+    it.second.check_collisions();
   }
 
   // Waiting for particle updates isend

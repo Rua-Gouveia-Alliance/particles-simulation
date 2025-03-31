@@ -16,8 +16,6 @@ private:
   std::vector<Particle> _particles;
   std::vector<Particle> _temp_particles;
 
-  void _check_collisions();
-
 public:
   Mass mass;
   long collisions = 0;
@@ -30,12 +28,13 @@ public:
         mass({id, -1, -1, 0}){};
 
   void update_mass();
-  void add_particle(Particle &p);
+  void add_particle(Particle &p) { _temp_particles.push_back(p); }
+  void add_updated_particle(Particle &p) { _particles.push_back(p); }
   std::vector<Particle>
   update_particles(const std::vector<Mass> &adjacent_masses);
   void finish_update();
+  void check_collisions();
   void print_particles() const;
 
   long id() const { return _id; }
-  const std::vector<Particle> &get_particles() const;
 };

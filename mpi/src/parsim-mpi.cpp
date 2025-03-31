@@ -130,6 +130,7 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
   // initialize cell
   for (auto &it : grid.local_cells) {
     it.second.finish_update();
+    it.second.check_collisions();
   }
 
   return grid;

@@ -35,7 +35,7 @@ void Cell::update_mass() {
   mass.y = y_res / mass.val;
 }
 
-void Cell::_check_collisions() {
+void Cell::check_collisions() {
   std::vector<Particle> final_particles;
   long long p_count = _particles.size();
   std::vector<bool> collided(p_count, false);
@@ -69,8 +69,6 @@ void Cell::_check_collisions() {
 
   _particles = final_particles;
 }
-
-void Cell::add_particle(Particle &p) { _temp_particles.push_back(p); }
 
 std::vector<Particle>
 Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
@@ -147,7 +145,6 @@ Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
 void Cell::finish_update() {
   _particles = _temp_particles;
   _temp_particles = std::vector<Particle>();
-  _check_collisions();
 }
 
 void Cell::print_particles() const {
@@ -158,5 +155,3 @@ void Cell::print_particles() const {
   std::cout << "Center of Mass: " << mass.x << ", " << mass.y << std::endl;
   std::cout << "Mass: " << mass.val << std::endl;
 }
-
-const std::vector<Particle> &Cell::get_particles() const { return _particles; }
