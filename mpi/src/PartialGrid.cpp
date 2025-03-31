@@ -27,14 +27,17 @@ PartialGrid::PartialGrid(int rank, int max_rank, double side, long ncside)
                          &mpi_mass_t);
   MPI_Type_commit(&mpi_mass_t);
 
-  int p_count = 6;
-  int p_blocklengths[6] = {1, 1, 1, 1, 1, 1};
-  MPI_Datatype p_types[6] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
+  int p_count = 7;
+  int p_blocklengths[7] = {1, 1, 1, 1, 1, 1, 1};
+  MPI_Datatype p_types[7] = {MPI_INT,    MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
                              MPI_DOUBLE, MPI_DOUBLE, MPI_C_BOOL};
-  MPI_Aint p_displacements[6] = {
-      offsetof(Particle, x),  offsetof(Particle, y),
-      offsetof(Particle, vx), offsetof(Particle, vy),
-      offsetof(Particle, m),  offsetof(Particle, first_particle)};
+  MPI_Aint p_displacements[7] = {offsetof(Particle, id),
+                                 offsetof(Particle, x),
+                                 offsetof(Particle, y),
+                                 offsetof(Particle, vx),
+                                 offsetof(Particle, vy),
+                                 offsetof(Particle, m),
+                                 offsetof(Particle, first_particle)};
   MPI_Type_create_struct(p_count, p_blocklengths, p_displacements, p_types,
                          &mpi_particle_t);
   MPI_Type_commit(&mpi_particle_t);
@@ -83,21 +86,39 @@ std::vector<Mass> PartialGrid::_get_adjacent_masses(Cell &cell) {
       mass = adjacent_cell.mass;
     }
 
+    if (_rank == 2 && cell.id() == 8) {
+      for (const auto &mass : adjacent_masses) {
+        fprintf(stdout, "Mass %li ", mass.id);
+        fprintf(stdout, "x: %#.6f ", mass.x);
+        fprintf(stdout, "y: %#.6f ", mass.y);
+        fprintf(stdout, "m: %#.6f\n", mass.val);
+      }
+    }
+
     // wrapping in x direction
     if (adjacent_cell_x >= cell.x + side * 2) {
-      mass.x = mass.x - side;
+      mass.x -= side;
     } else if (adjacent_cell_x < cell.x - side) {
-      mass.x = mass.x + side;
+      mass.x += side;
     }
 
     // wrapping in y direction
     if (adjacent_cell_y >= cell.y + side * 2) {
-      mass.y = mass.y - side;
+      mass.y -= side;
     } else if (adjacent_cell_y < cell.y - side) {
-      mass.y = mass.y + side;
+      mass.y += side;
     }
 
     adjacent_masses.push_back(mass);
+  }
+
+  if (_rank == 2 && cell.id() == 8) {
+    for (const auto &mass : adjacent_masses) {
+      fprintf(stdout, "Mass %li ", mass.id);
+      fprintf(stdout, "x: %#.6f ", mass.x);
+      fprintf(stdout, "y: %#.6f ", mass.y);
+      fprintf(stdout, "m: %#.6f\n", mass.val);
+    }
   }
 
   return adjacent_masses;
@@ -169,6 +190,44 @@ void PartialGrid::_update_local_cells() {
   }
 }
 
+void PartialGrid::_print_trace() {
+  if (_rank != 2)
+    return;
+
+  for (const auto &it : local_cells) {
+    for (const auto &p : it.second.particles()) {
+      fprintf(stdout, "Particle %lli: ", p.id);
+      fprintf(stdout, "mass=%#.6f ", p.m);
+      fprintf(stdout, "x=%#.6f ", p.x);
+      fprintf(stdout, "y=%#.6f ", p.y);
+      fprintf(stdout, "vx=%#.6f ", p.vx);
+      fprintf(stdout, "vy=%#.6f\n", p.vy);
+    }
+  }
+
+  for (long long i = 0; i < 9; ++i) {
+    for (const auto &it : local_cells) {
+      if (it.first == i) {
+        fprintf(stdout, "Cell %lli ", i);
+        fprintf(stdout, "x: %#.6f ", it.second.mass.x);
+        fprintf(stdout, "y: %#.6f ", it.second.mass.y);
+        fprintf(stdout, "m: %#.6f\n", it.second.mass.val);
+        break;
+      }
+    }
+
+    for (const auto &it : adjacent_cells) {
+      if (it.first == i) {
+        fprintf(stdout, "Cell %lli ", i);
+        fprintf(stdout, "x: %#.6f ", it.second.mass.x);
+        fprintf(stdout, "y: %#.6f ", it.second.mass.y);
+        fprintf(stdout, "m: %#.6f\n", it.second.mass.val);
+        break;
+      }
+    }
+  }
+}
+
 void PartialGrid::update() {
   long size = _adjacent_ranks.size();
   std::vector<MPI_Request> requests(size * 2);
@@ -210,6 +269,8 @@ void PartialGrid::update() {
       adjacent_cells.at(mass.id).mass = mass;
     }
   }
+
+  _print_trace();
 
   _update_local_cells();
 
@@ -291,14 +352,6 @@ void PartialGrid::sync_final_state() {
   MPI_Type_free(&mpi_mass_t);
   MPI_Type_free(&mpi_particle_t);
   MPI_Type_free(&mpi_final_state_t);
-}
-
-void PartialGrid::print_cells() const {
-  for (const auto &it : local_cells) {
-    std::cout << "Cell " << it.second.id() << std::endl;
-    it.second.print_particles();
-    std::cout << std::endl;
-  }
 }
 
 Particle PartialGrid::get_first_particle() const { return _first_particle; }

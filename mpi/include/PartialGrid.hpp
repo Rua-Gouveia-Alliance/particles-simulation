@@ -23,6 +23,7 @@ private:
   void _add_particle_to_cell(Particle &p);
   void _update_local_masses();
   void _update_local_cells();
+  void _print_trace();
 
 public:
   std::unordered_map<int, PartialCell> adjacent_cells;
@@ -41,7 +42,6 @@ public:
   void update();
   void sync_final_state();
 
-  void print_cells() const;
   Particle get_first_particle() const;
   long get_collisions() const;
 };

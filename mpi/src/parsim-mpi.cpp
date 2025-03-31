@@ -35,7 +35,7 @@ double rnd_normal01() {
 }
 
 void init_particles(long seed, double side, long ncside, long long n_part,
-                    std::vector<Particle> &par) {
+                    std::vector<Particle> &par, int rank) {
   double (*rnd01)() = rnd_uniform01;
   long long i;
 
@@ -54,6 +54,16 @@ void init_particles(long seed, double side, long ncside, long long n_part,
     par[i].vy = (rnd01() - 0.5) * side / ncside / 5.0;
 
     par[i].m = rnd01() * 0.01 * (ncside * ncside) / n_part / G * EPSILON2;
+    par[i].id = i;
+
+    if (rank == 0) {
+      fprintf(stdout, "Particle %lli: ", i);
+      fprintf(stdout, "mass=%#.6f ", par[i].m);
+      fprintf(stdout, "x=%#.6f ", par[i].x);
+      fprintf(stdout, "y=%#.6f ", par[i].y);
+      fprintf(stdout, "vx=%#.6f ", par[i].vx);
+      fprintf(stdout, "vy=%#.6f\n", par[i].vy);
+    }
   }
   par[0].first_particle = true;
 }
@@ -173,7 +183,7 @@ int main(int argc, char *argv[]) {
       return 0;
     }
 
-    init_particles(seed, side, ncside, n_part, particles);
+    init_particles(seed, side, ncside, n_part, particles, rank);
 
     exec_time = -omp_get_wtime();
     PartialGrid grid = init_grid(rank, nprocs, side, ncside, particles);

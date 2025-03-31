@@ -34,7 +34,7 @@ public:
   update_particles(const std::vector<Mass> &adjacent_masses);
   void finish_update();
   void check_collisions();
-  void print_particles() const;
 
+  std::vector<Particle> particles() const { return _particles; };
   long id() const { return _id; }
 };

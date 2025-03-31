@@ -98,6 +98,11 @@ Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
       force_x = force * (dx * inv_distance_sqrt);
       force_y = force * (dy * inv_distance_sqrt);
 
+      if (pi.id == 0) {
+        std::cout << "Force by particle " << _particles[j].id << ", " << force_x
+                  << ", " << force_y << "\n";
+      }
+
       forces[i].first += force_x;
       forces[j].first -= force_x;
       forces[i].second += force_y;
@@ -119,6 +124,11 @@ Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
       forces[i].first += force * (dx * inv_distance_sqrt);
       forces[i].second += force * (dy * inv_distance_sqrt);
+
+      if (pi.id == 0)
+        std::cout << "Force by cell " << mass.id << ", "
+                  << force * (dx * inv_distance_sqrt) << ", "
+                  << force * (dy * inv_distance_sqrt) << "\n";
     }
 
     // calculate new acceleration, velocity, position
@@ -136,6 +146,7 @@ Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
     if (pi.first_particle)
       new_particle.first_particle = true;
 
+    new_particle.id = pi.id;
     new_particles.push_back(new_particle);
   }
 
@@ -145,13 +156,4 @@ Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
 void Cell::finish_update() {
   _particles = _temp_particles;
   _temp_particles = std::vector<Particle>();
-}
-
-void Cell::print_particles() const {
-  for (const auto &p : _particles) {
-    std::cout << "x: " << p.x << "\ty: " << p.y << "\tvx: " << p.vx
-              << "\tvy: " << p.vy << "\tm: " << p.m << std::endl;
-  }
-  std::cout << "Center of Mass: " << mass.x << ", " << mass.y << std::endl;
-  std::cout << "Mass: " << mass.val << std::endl;
 }
