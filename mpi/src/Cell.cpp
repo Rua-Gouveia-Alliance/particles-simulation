@@ -12,7 +12,7 @@
 void Cell::update_mass() {
   double total = 0;
 
-  for (const auto &p : _particles) {
+  for (const auto &p : particles) {
     total += p.m;
   }
   mass.val = total;
@@ -26,7 +26,7 @@ void Cell::update_mass() {
     return;
   }
 
-  for (const auto &p : _particles) {
+  for (const auto &p : particles) {
     x_res += p.m * p.x;
     y_res += p.m * p.y;
   }
@@ -37,19 +37,19 @@ void Cell::update_mass() {
 
 void Cell::check_collisions() {
   std::vector<Particle> final_particles;
-  long long p_count = _particles.size();
+  long long p_count = particles.size();
   std::vector<bool> collided(p_count, false);
   double dx, dy, distance_sq;
   long long i;
 
   for (i = 0; i < p_count; i++) {
-    const Particle &pi = _particles[i];
+    const Particle &pi = particles[i];
 
     for (long long j = i + 1; j < p_count; j++) {
       if (i == j)
         continue;
 
-      const Particle &pj = _particles[j];
+      const Particle &pj = particles[j];
 
       dx = pi.x - pj.x;
       dy = pi.y - pj.y;
@@ -64,34 +64,34 @@ void Cell::check_collisions() {
     }
 
     if (!collided[i])
-      final_particles.push_back(_particles[i]);
+      final_particles.push_back(particles[i]);
   }
 
-  _particles = final_particles;
+  particles = final_particles;
 }
 
 std::vector<Particle>
 Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
   Particle new_particle;
   std::vector<Particle> new_particles;
-  std::vector<std::pair<double, double>> forces(_particles.size(), {0.0, 0.0});
+  std::vector<std::pair<double, double>> forces(particles.size(), {0.0, 0.0});
   double force;
   double dx, dy, distance_sq, inv_distance_sqrt;
   double force_x, force_y;
   double ax, ay;
   double Gm_i;
 
-  for (long long i = 0; i < _particles.size(); i++) {
-    const Particle &pi = _particles[i];
-    Gm_i = G * _particles[i].m;
+  for (long long i = 0; i < particles.size(); i++) {
+    const Particle &pi = particles[i];
+    Gm_i = G * particles[i].m;
 
     // calculate resulting force for particles inside same cell
-    for (long long j = i + 1; j < _particles.size(); j++) {
-      dx = _particles[j].x - pi.x;
-      dy = _particles[j].y - pi.y;
+    for (long long j = i + 1; j < particles.size(); j++) {
+      dx = particles[j].x - pi.x;
+      dy = particles[j].y - pi.y;
       distance_sq = dx * dx + dy * dy;
 
-      force = Gm_i * _particles[j].m;
+      force = Gm_i * particles[j].m;
       force /= distance_sq;
 
       inv_distance_sqrt = 1.0 / std::sqrt(distance_sq);
@@ -143,12 +143,12 @@ Cell::update_particles(const std::vector<Mass> &adjacent_masses) {
 }
 
 void Cell::finish_update() {
-  _particles = _temp_particles;
+  particles = _temp_particles;
   _temp_particles = std::vector<Particle>();
 }
 
 void Cell::print_particles() const {
-  for (const auto &p : _particles) {
+  for (const auto &p : particles) {
     std::cout << "x: " << p.x << "\ty: " << p.y << "\tvx: " << p.vx
               << "\tvy: " << p.vy << "\tm: " << p.m << std::endl;
   }

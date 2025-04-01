@@ -13,8 +13,7 @@ private:
   double _side;
   int _rank, _max_rank;
   long _ncside, _remote_collisions = 0;
-  Particle &_first_particle;
-  Particle _default_first_particle = Particle();
+  Particle _first_particle;
   std::unordered_map<int, long> _adjacent_ranks;
   MPI_Datatype mpi_mass_t, mpi_particle_t;
 
@@ -41,7 +40,6 @@ public:
   void update();
   void sync_final_state();
 
-  void print_cells() const;
-  Particle get_first_particle() const;
+  const Particle &get_first_particle() const { return _first_particle; }
   long get_collisions() const;
 };

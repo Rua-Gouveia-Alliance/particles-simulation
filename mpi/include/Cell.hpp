@@ -13,13 +13,13 @@
 class Cell {
 private:
   long _id;
-  std::vector<Particle> _particles;
   std::vector<Particle> _temp_particles;
 
 public:
   Mass mass;
   long collisions = 0;
   double x, y, side;
+  std::vector<Particle> particles;
   std::vector<int> adjacent_ranks;
 
   Cell(long id, std::vector<int> &adjacent_ranks, double x, double y,
@@ -29,7 +29,7 @@ public:
 
   void update_mass();
   void add_particle(Particle &p) { _temp_particles.push_back(p); }
-  void add_updated_particle(Particle &p) { _particles.push_back(p); }
+  void add_updated_particle(Particle &p) { particles.push_back(p); }
   std::vector<Particle>
   update_particles(const std::vector<Mass> &adjacent_masses);
   void finish_update();

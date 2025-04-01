@@ -90,11 +90,21 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
     std::vector<bool> ranks = std::vector<bool>(nprocs, false);
     std::vector<long> adj_cells = PartialGrid::get_adjacent_cells(i, ncside);
 
-    adj.reserve(adj_cells.size());
+    if (loc.rank == rank)
+      adj.reserve(adj_cells.size());
+
     for (const auto &id : adj_cells) {
       if (partition[id].rank == rank) {
         owner_is_adjacent = true;
         continue;
+      }
+
+      if (loc.rank != rank) {
+        if (owner_is_adjacent) {
+          break;
+        } else {
+          continue;
+        }
       }
 
       if (!ranks[partition[id].rank]) {

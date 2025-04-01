@@ -15,8 +15,7 @@
 #define FINAL_STATE 3
 
 PartialGrid::PartialGrid(int rank, int max_rank, double side, long ncside)
-    : _rank(rank), _max_rank(max_rank), _side(side), _ncside(ncside),
-      _first_particle(_default_first_particle) {
+    : _rank(rank), _max_rank(max_rank), _side(side), _ncside(ncside) {
 
   int m_count = 4;
   int m_blocklengths[4] = {1, 1, 1, 1};
@@ -157,16 +156,11 @@ void PartialGrid::_update_local_cells() {
     std::move(part.begin(), part.end(), std::back_inserter(new_particles));
   }
 
-  _first_particle = _default_first_particle;
-  for (auto &p : new_particles) {
-    if (p.first_particle)
-      _first_particle = p;
+  for (auto &p : new_particles)
     _add_particle_to_cell(p);
-  }
 
-  for (auto &it : local_cells) {
+  for (auto &it : local_cells)
     it.second.finish_update();
-  }
 }
 
 void PartialGrid::update() {
@@ -272,6 +266,13 @@ void PartialGrid::sync_final_state() {
                          &mpi_final_state_t);
   MPI_Type_commit(&mpi_final_state_t);
 
+  for (const auto &it : local_cells) {
+    for (const auto &p : it.second.particles) {
+      if (p.first_particle)
+        _first_particle = p;
+    }
+  }
+
   if (_rank == 0) {
     MPI_Status status;
     final_state_t state;
@@ -292,16 +293,6 @@ void PartialGrid::sync_final_state() {
   MPI_Type_free(&mpi_particle_t);
   MPI_Type_free(&mpi_final_state_t);
 }
-
-void PartialGrid::print_cells() const {
-  for (const auto &it : local_cells) {
-    std::cout << "Cell " << it.second.id() << std::endl;
-    it.second.print_particles();
-    std::cout << std::endl;
-  }
-}
-
-Particle PartialGrid::get_first_particle() const { return _first_particle; }
 
 long PartialGrid::get_collisions() const {
   long total = 0;
