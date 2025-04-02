@@ -77,7 +77,7 @@ std::vector<CellLocation> partition_grid(int nprocs, long ncside,
 // TODO: this can probably be optimized
 PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
                       std::vector<Particle> &pv) {
-  PartialGrid grid(rank, ncside - 1, side, ncside);
+  PartialGrid grid(rank, std::min(ncside, (long)nprocs) - 1, side, ncside);
   double cell_size = side / ncside;
   std::vector<CellLocation> partition =
       partition_grid(nprocs, ncside, cell_size);
