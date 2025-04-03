@@ -11,7 +11,7 @@
 #define FINAL_STATE 3
 
 PartialGrid::PartialGrid(int rank, int max_rank, double side, long ncside)
-    : _rank(rank), _max_rank(max_rank), _side(side), _ncside(ncside),
+    : _rank(rank), max_rank(max_rank), _side(side), _ncside(ncside),
       _first_particle({.first_particle = false}) {
 
   int m_count = 4;
@@ -324,7 +324,7 @@ void PartialGrid::sync_final_state() {
     final_state_t state;
 
     // TODO MPI Gather?
-    for (int i = 1; i < _max_rank + 1; ++i) {
+    for (int i = 1; i < max_rank + 1; ++i) {
       MPI_Recv(&state, 1, mpi_final_state_t, i, FINAL_STATE, MPI_COMM_WORLD,
                &status);
       _remote_collisions += state.collisions;
@@ -336,9 +336,13 @@ void PartialGrid::sync_final_state() {
     MPI_Send(&state, 1, mpi_final_state_t, 0, FINAL_STATE, MPI_COMM_WORLD);
   }
 
+  MPI_Type_free(&mpi_final_state_t);
+  finish();
+}
+
+void PartialGrid::finish() {
   MPI_Type_free(&mpi_mass_t);
   MPI_Type_free(&mpi_particle_t);
-  MPI_Type_free(&mpi_final_state_t);
 }
 
 long PartialGrid::get_collisions() const {

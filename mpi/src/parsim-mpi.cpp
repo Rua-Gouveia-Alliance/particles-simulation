@@ -3,6 +3,8 @@
 #include "PartialCell.hpp"
 #include "PartialGrid.hpp"
 #include "Particle.hpp"
+#include <unordered_map>
+#include <unordered_set>
 #define _USE_MATH_DEFINES
 #include <algorithm>
 #include <cmath>
@@ -58,43 +60,59 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par[0].first_particle = true;
 }
 
-std::vector<CellLocation> partition_grid(int nprocs, long ncside,
-                                         double cell_size) {
-  std::vector<CellLocation> partition;
+int partition_grid(int nprocs, long ncside, double cell_size,
+                   std::unordered_map<int, CellLocation> &partition, int rank) {
   partition.reserve(ncside * ncside);
+  int max_rank = 0;
+  int proc = 0; // Process we are currently assigning cells to
+  int size = std::max(5, (int)std::sqrt((ncside * ncside) / nprocs));
+  std::pair<long, long> loc = {0, 0};
 
-  for (long i = 0; i < ncside; ++i) {
-    double y = i * cell_size;
-    for (long j = 0; j < ncside; ++j) {
-      double x = j * cell_size;
-      partition.push_back(CellLocation(x, y, i % nprocs));
+  while (loc.first != ncside && loc.second != ncside) {
+    long xsize = std::min(loc.first + size, ncside);
+    long ysize = std::min(loc.second + size, ncside);
+
+    for (long i = loc.second; i < ysize; ++i) {
+      double y = i * cell_size;
+      for (long j = loc.first; j < xsize; ++j) {
+        double x = j * cell_size;
+        partition.emplace(j + i * ncside, CellLocation(x, y, proc));
+      }
     }
+
+    if (xsize == ncside && ysize != ncside) {
+      loc.first = 0;
+      loc.second = ysize;
+    } else {
+      loc.first = xsize;
+    }
+    proc = (proc + 1) % nprocs;
+    ++max_rank;
   }
 
-  return partition;
+  return std::min(max_rank, nprocs) - 1;
 }
 
-// TODO: this can probably be optimized
 PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
                       std::vector<Particle> &pv) {
-  PartialGrid grid(rank, std::min(ncside, (long)nprocs) - 1, side, ncside);
   double cell_size = side / ncside;
-  std::vector<CellLocation> partition =
-      partition_grid(nprocs, ncside, cell_size);
+  std::unordered_map<int, CellLocation> partition;
+  int max_rank = partition_grid(nprocs, ncside, cell_size, partition, rank);
+  PartialGrid grid(rank, max_rank, side, ncside);
 
   std::vector<bool> grid_ranks = std::vector<bool>(nprocs, false);
-  for (long i = 0; i < partition.size(); ++i) {
-    std::vector<int> adj;
+  for (auto &it : partition) {
+    int cid = it.first;
+    CellLocation &loc = it.second;
+    std::unordered_set<int> adj;
     bool owner_is_adjacent = false;
-    CellLocation &loc = partition[i];
-    std::vector<bool> ranks = std::vector<bool>(nprocs, false);
-    std::vector<long> adj_cells = PartialGrid::get_adjacent_cells(i, ncside);
+    std::vector<long> adj_cells = PartialGrid::get_adjacent_cells(cid, ncside);
 
     if (loc.rank == rank)
       adj.reserve(adj_cells.size());
 
     for (const auto &id : adj_cells) {
-      if (partition[id].rank == rank) {
+      if (partition.at(id).rank == rank) {
         owner_is_adjacent = true;
         continue;
       }
@@ -107,27 +125,19 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
         }
       }
 
-      if (!ranks[partition[id].rank]) {
-        ranks[partition[id].rank] = true;
-        // TODO use set or map for adjacent?
-        adj.push_back(partition[id].rank);
-      }
-      if (!grid_ranks[partition[id].rank]) {
-        grid_ranks[partition[id].rank] = true;
-        // TODO use set or map for grid adjacent
-        grid.add_adjacent_rank(partition[id].rank);
-      }
-      if (!partition[id].counted) {
-        partition[id].counted = true;
-        grid.increment_adjacent_rank(partition[id].rank);
+      adj.insert(partition.at(id).rank);
+      grid.add_adjacent_rank(partition.at(id).rank);
+      if (!partition.at(id).counted) {
+        partition.at(id).counted = true;
+        grid.increment_adjacent_rank(partition.at(id).rank);
       }
     }
 
     if (loc.rank == rank) {
-      Cell cell = Cell(i, adj, loc.x, loc.y, cell_size);
+      Cell cell = Cell(cid, adj, loc.x, loc.y, cell_size);
       grid.add_local_cell(cell);
     } else if (owner_is_adjacent) {
-      PartialCell cell = PartialCell(i, loc.rank, loc.x, loc.y, cell_size);
+      PartialCell cell = PartialCell(cid, loc.rank, loc.x, loc.y, cell_size);
       grid.add_adjacent_cell(cell);
     }
   }
@@ -137,7 +147,7 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
     long cell_x = static_cast<long>(p.x / cell_size);
     long cell_y = static_cast<long>(p.y / cell_size);
     long idx = cell_x + cell_y * ncside;
-    if (partition[idx].rank == rank) {
+    if (partition.at(idx).rank == rank) {
       if (grid.fully_local_cells.find(idx) != grid.fully_local_cells.end()) {
         grid.fully_local_cells.at(idx).add_particle(p);
       } else {
@@ -192,15 +202,16 @@ int main(int argc, char *argv[]) {
     long long n_part = std::stoll(argv[4]);
     long long time_steps = std::stoll(argv[5]);
 
-    if (rank > ncside - 1) {
-      MPI_Finalize();
-      return 0;
-    }
-
     init_particles(seed, side, ncside, n_part, particles);
 
     exec_time = -omp_get_wtime();
     PartialGrid grid = init_grid(rank, nprocs, side, ncside, particles);
+    if (rank > grid.max_rank) {
+      grid.finish();
+      MPI_Finalize();
+      return 0;
+    }
+
     for (long long ll = 0; ll < time_steps; ll++)
       grid.update();
     grid.sync_final_state();

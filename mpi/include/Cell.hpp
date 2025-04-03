@@ -4,6 +4,7 @@
 #include "PartialCell.hpp"
 #include "Particle.hpp"
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #define G 6.67408e-11
@@ -20,9 +21,9 @@ public:
   long collisions = 0;
   double x, y, side;
   std::vector<Particle> particles;
-  std::vector<int> adjacent_ranks;
+  std::unordered_set<int> adjacent_ranks;
 
-  Cell(long id, std::vector<int> &adjacent_ranks, double x, double y,
+  Cell(long id, std::unordered_set<int> &adjacent_ranks, double x, double y,
        double side)
       : _id(id), adjacent_ranks(adjacent_ranks), x(x), y(y), side(side),
         mass({id, -1, -1, 0}){};

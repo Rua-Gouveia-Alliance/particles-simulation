@@ -6,5 +6,5 @@ public:
   double x, y;
   bool counted;
   CellLocation(double x, double y, long rank)
-      : rank(rank), x(x), y(y), counted(false) {}
+      : x(x), y(y), rank(rank), counted(false) {}
 };

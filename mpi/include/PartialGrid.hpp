@@ -10,8 +10,8 @@
 
 class PartialGrid {
 private:
+  int _rank;
   double _side;
-  int _rank, _max_rank;
   long _ncside, _remote_collisions = 0;
   Particle _first_particle;
   std::unordered_map<int, long> _adjacent_ranks;
@@ -25,6 +25,7 @@ private:
   void _finish_local_updates();
 
 public:
+  int max_rank;
   std::unordered_map<int, PartialCell> adjacent_cells;
 
   // Other ranks need information about these cells
@@ -41,11 +42,12 @@ public:
   void add_adjacent_cell(PartialCell cell) {
     adjacent_cells.try_emplace(cell.id(), cell);
   }
-  void add_adjacent_rank(int rank) { _adjacent_ranks.emplace(rank, 0); }
+  void add_adjacent_rank(int rank) { _adjacent_ranks.try_emplace(rank, 0); }
   void increment_adjacent_rank(int rank) { ++_adjacent_ranks.at(rank); }
 
   void update();
   void sync_final_state();
+  void finish();
 
   const Particle &get_first_particle() const { return _first_particle; }
   long get_collisions() const;
