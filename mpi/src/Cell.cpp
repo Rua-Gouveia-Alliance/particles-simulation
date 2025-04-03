@@ -11,24 +11,20 @@
 
 void Cell::update_mass() {
   double total = 0;
+  double x_res = 0;
+  double y_res = 0;
 
   for (const auto &p : particles) {
     total += p.m;
+    x_res += p.m * p.x;
+    y_res += p.m * p.y;
   }
   mass.val = total;
-
-  double x_res = 0;
-  double y_res = 0;
 
   if (mass.val == 0) {
     mass.x = -1;
     mass.y = -1;
     return;
-  }
-
-  for (const auto &p : particles) {
-    x_res += p.m * p.x;
-    y_res += p.m * p.y;
   }
 
   mass.x = x_res / mass.val;

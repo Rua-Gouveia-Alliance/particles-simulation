@@ -109,10 +109,12 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
 
       if (!ranks[partition[id].rank]) {
         ranks[partition[id].rank] = true;
+        // TODO use set or map for adjacent?
         adj.push_back(partition[id].rank);
       }
       if (!grid_ranks[partition[id].rank]) {
         grid_ranks[partition[id].rank] = true;
+        // TODO use set or map for grid adjacent
         grid.add_adjacent_rank(partition[id].rank);
       }
       if (!partition[id].counted) {
