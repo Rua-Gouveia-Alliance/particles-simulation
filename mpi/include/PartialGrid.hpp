@@ -20,17 +20,24 @@ private:
   std::vector<Mass> _get_adjacent_masses(Cell &cell);
   long _get_particle_index(Particle &p);
   void _add_particle_to_cell(Particle &p);
-  void _update_local_masses();
-  void _update_local_cells();
+  void _update_local_masses(std::unordered_map<int, Cell> &cells);
+  void _update_local_cells(std::unordered_map<int, Cell> &cells);
+  void _finish_local_updates();
 
 public:
   std::unordered_map<int, PartialCell> adjacent_cells;
-  std::unordered_map<int, Cell> local_cells;
+
+  // Other ranks need information about these cells
+  // These cells should be prioritized
+  std::unordered_map<int, Cell> partially_local_cells;
+
+  // Only our rank cares about these cells
+  std::unordered_map<int, Cell> fully_local_cells;
 
   PartialGrid(int rank, int max_rank, double side, long ncside);
 
   static std::vector<long> get_adjacent_cells(long ci, long ncside);
-  void add_local_cell(Cell cell) { local_cells.try_emplace(cell.id(), cell); }
+  void add_local_cell(Cell &cell);
   void add_adjacent_cell(PartialCell cell) {
     adjacent_cells.try_emplace(cell.id(), cell);
   }

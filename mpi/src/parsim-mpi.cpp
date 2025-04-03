@@ -122,9 +122,11 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
     }
 
     if (loc.rank == rank) {
-      grid.add_local_cell(Cell(i, adj, loc.x, loc.y, cell_size));
+      Cell cell = Cell(i, adj, loc.x, loc.y, cell_size);
+      grid.add_local_cell(cell);
     } else if (owner_is_adjacent) {
-      grid.add_adjacent_cell(PartialCell(i, loc.rank, loc.x, loc.y, cell_size));
+      PartialCell cell = PartialCell(i, loc.rank, loc.x, loc.y, cell_size);
+      grid.add_adjacent_cell(cell);
     }
   }
 
@@ -132,13 +134,23 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
   for (auto &p : pv) {
     long cell_x = static_cast<long>(p.x / cell_size);
     long cell_y = static_cast<long>(p.y / cell_size);
-    long cell_idx = cell_x + cell_y * ncside;
-    if (partition[cell_idx].rank == rank)
-      grid.local_cells.at(cell_idx).add_particle(p);
+    long idx = cell_x + cell_y * ncside;
+    if (partition[idx].rank == rank) {
+      if (grid.fully_local_cells.find(idx) != grid.fully_local_cells.end()) {
+        grid.fully_local_cells.at(idx).add_particle(p);
+      } else {
+        grid.partially_local_cells.at(idx).add_particle(p);
+      }
+    }
   }
 
   // initialize cell
-  for (auto &it : grid.local_cells) {
+  for (auto &it : grid.fully_local_cells) {
+    it.second.finish_update();
+    it.second.check_collisions();
+  }
+
+  for (auto &it : grid.partially_local_cells) {
     it.second.finish_update();
     it.second.check_collisions();
   }

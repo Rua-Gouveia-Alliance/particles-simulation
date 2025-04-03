@@ -6,7 +6,6 @@
 #include <iterator>
 #include <mpi.h>
 #include <omp.h>
-#include <stddef.h>
 #include <unordered_map>
 #include <vector>
 
@@ -15,7 +14,8 @@
 #define FINAL_STATE 3
 
 PartialGrid::PartialGrid(int rank, int max_rank, double side, long ncside)
-    : _rank(rank), _max_rank(max_rank), _side(side), _ncside(ncside) {
+    : _rank(rank), _max_rank(max_rank), _side(side), _ncside(ncside),
+      _first_particle({.first_particle = false}) {
 
   int m_count = 4;
   int m_blocklengths[4] = {1, 1, 1, 1};
@@ -60,6 +60,14 @@ std::vector<long> PartialGrid::get_adjacent_cells(long ci, long ncside) {
   return adjacent;
 }
 
+void PartialGrid::add_local_cell(Cell &cell) {
+  if (cell.adjacent_ranks.size() == 0) {
+    fully_local_cells.try_emplace(cell.id(), cell);
+  } else {
+    partially_local_cells.try_emplace(cell.id(), cell);
+  }
+}
+
 std::vector<Mass> PartialGrid::_get_adjacent_masses(Cell &cell) {
   double side = cell.side;
   const std::vector<long> &adjacent_idx =
@@ -70,8 +78,13 @@ std::vector<Mass> PartialGrid::_get_adjacent_masses(Cell &cell) {
     Mass mass;
     double adjacent_cell_x, adjacent_cell_y;
 
-    if (local_cells.find(i) != local_cells.end()) {
-      Cell &adjacent_cell = local_cells.at(i);
+    if (fully_local_cells.find(i) != fully_local_cells.end()) {
+      Cell &adjacent_cell = fully_local_cells.at(i);
+      adjacent_cell_x = adjacent_cell.x;
+      adjacent_cell_y = adjacent_cell.y;
+      mass = adjacent_cell.mass;
+    } else if (partially_local_cells.find(i) != partially_local_cells.end()) {
+      Cell &adjacent_cell = partially_local_cells.at(i);
       adjacent_cell_x = adjacent_cell.x;
       adjacent_cell_y = adjacent_cell.y;
       mass = adjacent_cell.mass;
@@ -130,25 +143,27 @@ long PartialGrid::_get_particle_index(Particle &p) {
 }
 
 void PartialGrid::_add_particle_to_cell(Particle &p) {
-  long cell_idx = _get_particle_index(p);
-  if (local_cells.find(cell_idx) != local_cells.end()) {
-    local_cells.at(cell_idx).add_particle(p);
+  long idx = _get_particle_index(p);
+  if (fully_local_cells.find(idx) != fully_local_cells.end()) {
+    fully_local_cells.at(idx).add_particle(p);
+  } else if (partially_local_cells.find(idx) != partially_local_cells.end()) {
+    partially_local_cells.at(idx).add_particle(p);
   } else {
-    adjacent_cells.at(cell_idx).add_particle(p);
+    adjacent_cells.at(idx).add_particle(p);
   }
 }
 
-void PartialGrid::_update_local_masses() {
-  for (auto &it : local_cells) {
+void PartialGrid::_update_local_masses(std::unordered_map<int, Cell> &cells) {
+  for (auto &it : cells) {
     it.second.update_mass();
   }
 }
 
-void PartialGrid::_update_local_cells() {
+void PartialGrid::_update_local_cells(std::unordered_map<int, Cell> &cells) {
   std::vector<Particle> new_particles;
-  long cell_count = local_cells.size();
+  long cell_count = cells.size();
 
-  for (auto &it : local_cells) {
+  for (auto &it : cells) {
     Cell &cell = it.second;
     std::vector<Mass> masses = _get_adjacent_masses(cell);
     std::vector<Particle> part = cell.update_particles(masses);
@@ -158,8 +173,13 @@ void PartialGrid::_update_local_cells() {
 
   for (auto &p : new_particles)
     _add_particle_to_cell(p);
+}
 
-  for (auto &it : local_cells)
+void PartialGrid::_finish_local_updates() {
+  for (auto &it : fully_local_cells)
+    it.second.finish_update();
+
+  for (auto &it : partially_local_cells)
     it.second.finish_update();
 }
 
@@ -179,12 +199,12 @@ void PartialGrid::update() {
               MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
   }
 
-  _update_local_masses();
+  _update_local_masses(partially_local_cells);
 
   // Calculating the mass updates to send to each adjacent rank
   std::unordered_map<int, std::vector<Mass>> mass_updates;
   mass_updates.reserve(size);
-  for (const auto &it : local_cells) {
+  for (const auto &it : partially_local_cells) {
     for (const auto &id : it.second.adjacent_ranks) {
       mass_updates[id].push_back(it.second.mass);
     }
@@ -196,6 +216,8 @@ void PartialGrid::update() {
               MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
   }
 
+  _update_local_masses(fully_local_cells);
+
   std::vector<MPI_Status> statuses(size * 2);
   // Waiting for mass updates isend/irecv
   MPI_Waitall(size * 2, requests.data(), statuses.data());
@@ -205,7 +227,7 @@ void PartialGrid::update() {
     }
   }
 
-  _update_local_cells();
+  _update_local_cells(partially_local_cells);
 
   // Calculating the particle updates to send to each adjacent rank
   std::unordered_map<int, std::vector<Particle>> particle_updates;
@@ -225,6 +247,13 @@ void PartialGrid::update() {
               PARTICLE_UPDATE, MPI_COMM_WORLD, &requests[i++]);
   }
 
+  _update_local_cells(fully_local_cells);
+  _finish_local_updates();
+
+  for (auto &it : fully_local_cells) {
+    it.second.check_collisions();
+  }
+
   // Receiving particle updates from each adjacent rank
   for (const auto &it : _adjacent_ranks) {
     int count;
@@ -238,11 +267,11 @@ void PartialGrid::update() {
 
     for (auto &p : particles) {
       long idx = _get_particle_index(p);
-      local_cells.at(idx).add_updated_particle(p);
+      partially_local_cells.at(idx).add_updated_particle(p);
     }
   }
 
-  for (auto &it : local_cells) {
+  for (auto &it : partially_local_cells) {
     it.second.check_collisions();
   }
 
@@ -266,13 +295,33 @@ void PartialGrid::sync_final_state() {
                          &mpi_final_state_t);
   MPI_Type_commit(&mpi_final_state_t);
 
-  for (const auto &it : local_cells) {
+  for (const auto &it : partially_local_cells) {
     for (const auto &p : it.second.particles) {
       if (p.first_particle)
         _first_particle = p;
     }
   }
 
+  for (const auto &it : fully_local_cells) {
+    for (const auto &p : it.second.particles) {
+      if (p.first_particle)
+        _first_particle = p;
+    }
+  }
+
+  // final_state_t state = {_first_particle, get_collisions()};
+  // std::vector<final_state_t> states(_max_rank + 1);
+  // MPI_Gather(&state, 1, mpi_final_state_t, states.data(), _max_rank + 1,
+  //            mpi_final_state_t, 0, MPI_COMM_WORLD);
+  // if (_rank == 0) {
+  //   for (const auto &s : states) {
+  //     _remote_collisions += state.collisions;
+  //     if (state.particle.first_particle)
+  //       _first_particle = state.particle;
+  //   }
+  // }
+
+  // TODO: Use the gather above instead of using recv for all ranks
   if (_rank == 0) {
     MPI_Status status;
     final_state_t state;
@@ -296,8 +345,13 @@ void PartialGrid::sync_final_state() {
 
 long PartialGrid::get_collisions() const {
   long total = 0;
-  for (const auto &it : local_cells) {
+
+  for (const auto &it : fully_local_cells) {
     total += it.second.collisions;
   }
+  for (const auto &it : partially_local_cells) {
+    total += it.second.collisions;
+  }
+
   return total + _remote_collisions;
 }
