@@ -1,9 +1,6 @@
 #include "PartialGrid.hpp"
 #include "Mass.hpp"
 #include "Particle.hpp"
-#include <algorithm>
-#include <iostream>
-#include <iterator>
 #include <mpi.h>
 #include <omp.h>
 #include <unordered_map>
@@ -326,6 +323,7 @@ void PartialGrid::sync_final_state() {
     MPI_Status status;
     final_state_t state;
 
+    // TODO MPI Gather?
     for (int i = 1; i < _max_rank + 1; ++i) {
       MPI_Recv(&state, 1, mpi_final_state_t, i, FINAL_STATE, MPI_COMM_WORLD,
                &status);
