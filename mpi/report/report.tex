@@ -1,0 +1,177 @@
+%% Preamble
+\documentclass[paper=a4, fontsize=11pt]{scrartcl}
+\usepackage[T1]{fontenc}
+\usepackage{fourier}
+
+\usepackage[english]{babel}
+\usepackage[protrusion=true,expansion=true]{microtype}
+\usepackage[fleqn]{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage[pdftex]{graphicx}
+\usepackage{url}
+
+%% Custom sectioning
+\usepackage{sectsty}
+\allsectionsfont{\normalfont}
+
+%% Custom headers/footers (fancyhdr package)
+\usepackage{fancyhdr}
+\pagestyle{fancyplain}
+\fancyhead{}                       % No page header
+\fancyfoot[L]{}                    % Empty
+\fancyfoot[C]{}                    % Empty
+\fancyfoot[R]{\thepage}            % Pagenumbering
+\renewcommand{\headrulewidth}{0pt} % Remove header underlines
+\renewcommand{\footrulewidth}{0pt} % Remove footer underlines
+\setlength{\headheight}{13.6pt}
+
+%% Equation and float numbering
+\numberwithin{equation}{section} % Equationnumbering: section.eq#
+\numberwithin{figure}{section}   % Figurenumbering: section.fig#
+\numberwithin{table}{section}    % Tablenumbering: section.tab#
+
+%% Hyperlinks
+\usepackage{hyperref}
+
+%% Code block highlighting
+\usepackage{listings}
+
+%% Graphs
+\usepackage{pgfplots}
+\pgfplotsset{width=12cm,compat=1.18}
+
+%% Maketitle metadata
+\title{
+    \usefont{OT1}{bch}{b}{n}
+    \normalfont \normalsize \textsc{Instituto Superior Técnico} \\ [25pt]
+    \huge Parallel and Distributed Computing \\ Parsim MPI Report
+}
+\author{
+    \normalfont \normalsize
+    João Gouveia - 102611, Rodrigo Arede - 102606, Gonçalo Rua - 102604 \\[-3pt] \normalsize
+    \today
+}
+\date{}
+
+%%% Begin document
+\begin{document}
+\maketitle
+\section{Introduction}
+
+For this stage of the project we explored paralellizing the particle simulator
+using MPI and OpenMP. We developed several solutions, and empirically compared
+them using RNL's cluster. TODO Our results show?
+
+\section{Approach}
+\subsection{Lines}
+
+Our first approach was dividing the grid in lines, and assigning each line to a
+process. This is by far the easiest approach, it is also, at least
+theoretically, the worst.
+
+\subsection{Blocks}
+
+To minimize communication between nodes, we experimented with splitting the grid
+into blocks. Each processor first computes the centers of mass for the cells
+that need to be communicated and sends them to the appropriate rank. While
+waiting to receive the centers of mass it requires, it computes the centers of
+mass for the cells that do not need to be communicated. The process for
+calculating particle positions is analogous.
+
+Block dimensions are computed dynamically. Let $ncside$ denote the size of the
+grid's sides, $nprocs$ the number of processors available to us, and $npart$ the
+total number of particles. Let $size = \max(ncside / 2, 5)$ denote the height of
+our blocks. Each cell has a weight corresponding to the number of particles
+assigned to it, and each rank has a weight equal to the sum of the weights of
+the cells assigned to it. While the rank weight is less than a threshold value,
+defined as $\max(npart / nprocs, 10)$, we continue assigning vertical lines of
+$size$ cells to the current rank. Once this threshold is exceeded, we advance to
+the next rank in a round-robin fashion.
+
+\subsection{Blocks And OpenMP}
+
+After fine-tuning the values in our block strategy, we used OpenMP to
+paralellize the loop calculating the new particle positions. This further
+increased the running time of our program.
+
+\section{Synchronization Concerns}
+
+During our main loop there is only one point where some degree of
+synchronization happens,
+
+\section{Load Balancing}
+
+With OpenMP we used dynamic scheduling to evenly distribute computation across
+threads. This technique distributes workload among threads at runtime rather
+than assigning it statically before execution. Comparing the static vs dynamic
+approach, the latter gives us the best performance of the two.
+
+\section{Performance Results}
+
+\subsection{Methodology}
+
+We tested four variations 
+For analysing the performance of our implementation we used the following
+inputs:
+
+\begin{center}
+    \begin{tabular}{ | c c | }
+        \hline
+        Test Number & Input \\
+        \hline
+        1 & 12672 0.05 3 10 10 \\
+        \hline
+        2 & 5893 0.05 3 10 10 \\
+        \hline
+        3 & 8555 0.05 3 10 10 \\
+        \hline
+        4 & 12 100 5 10000 10000 \\
+        \hline
+        5 & -11 3500 20 500000 10 \\
+        \hline
+        6 & 1 5000 100 1000000 4 \\
+        \hline
+        7 & 1 5000 100 1000000 100 \\
+        \hline
+        8 & 1 5000 20 1000000 10 \\
+        \hline
+        9 & 1 1000 3 10000 10000 \\
+        \hline
+        10 & 3 5000 50 1000000 300 \\
+        \hline
+        11 & 3 5000 50 1000000 500 \\ 
+        \hline
+        12 & -1 1000 30 100000 1000 \\
+        \hline
+    \end{tabular}
+\end{center}
+
+\subsection{Results}
+
+The table below shows the execution times (in seconds) for the serial and OpenMP versions of the program:
+
+| Test Number | 1 thread (serial) | 2 threads | 4 threads | 8 threads |
+|-------------|-------------------|-----------|-----------|-----------|
+| 1           | 0.0s              | 0.0s      | 0.0s      | 0.0s      |
+| 2           | 0.0s              | 0.0s      | 0.0s      | 0.0s      |
+| 3           | 0.0s              | 0.0s      | 0.0s      | 0.0s      |
+| 4           | 53.9s             | 31.4s     | 21.2s     | 16.7s     |
+| 5           | 49.7s             | 25.5s     | 13.6s     | 7.5s      |
+| 6           | 1.6s              | 1.0s      | 0.8s      | 0.8s      |
+| 7           | 34.9s             | 23.0s     | 18.1s     | 15.7s     |
+| 8           | 57.1s             | 29.7s     | 15.6s     | 8.7s      |
+| 9           | 245.9s            | 141.4s    | 89.8s     | 68.0s     |
+| 10          | 289.4s            | 160.5s    | 100.1s    | 74.1s     |
+| 11          | 481.9s            | 263.0s    | 171.8s    | 128.5s    |
+| 12          | 81.8s             | 45.7s     | 30.4s     | 24.0s     |
+
+\section{Conclusion}
+
+The project successfully implemented a parallel particles simulation,
+demonstrating significant speedups using OpenMP. The next step is to use MPI to
+parallelize the workload across different machines, and exploring an hybrid
+MPI+OpenMP approach for even better performance and scalability.
+
+%%% End document
+\end{document}
