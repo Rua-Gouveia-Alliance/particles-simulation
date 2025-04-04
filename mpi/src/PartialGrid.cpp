@@ -1,6 +1,7 @@
 #include "PartialGrid.hpp"
 #include "Mass.hpp"
 #include "Particle.hpp"
+#include <iostream>
 #include <mpi.h>
 #include <omp.h>
 #include <unordered_map>
@@ -160,12 +161,18 @@ void PartialGrid::_update_local_cells(std::unordered_map<int, Cell> &cells) {
   std::vector<Particle> new_particles;
   long cell_count = cells.size();
 
-  for (auto &it : cells) {
-    Cell &cell = it.second;
+  const auto &begin = cells.begin();
+#pragma omp for schedule(dynamic)
+  for (long i = 0; i < cell_count; ++i) {
+    Cell &cell = std::next(begin, i)->second;
     std::vector<Mass> masses = _get_adjacent_masses(cell);
     std::vector<Particle> part = cell.update_particles(masses);
-    new_particles.reserve(new_particles.size() + part.size());
-    std::move(part.begin(), part.end(), std::back_inserter(new_particles));
+
+#pragma omp critical
+    {
+      new_particles.reserve(new_particles.size() + part.size());
+      std::move(part.begin(), part.end(), std::back_inserter(new_particles));
+    }
   }
 
   for (auto &p : new_particles)
@@ -173,11 +180,21 @@ void PartialGrid::_update_local_cells(std::unordered_map<int, Cell> &cells) {
 }
 
 void PartialGrid::_finish_local_updates() {
-  for (auto &it : fully_local_cells)
-    it.second.finish_update();
+  const auto &begin_0 = fully_local_cells.begin();
+  long fl_size = fully_local_cells.size();
+#pragma omp for
+  for (long i = 0; i < fl_size; i++) {
+    const auto &it = std::next(begin_0, i);
+    it->second.finish_update();
+  }
 
-  for (auto &it : partially_local_cells)
-    it.second.finish_update();
+  const auto &begin_1 = partially_local_cells.begin();
+  long pl_size = partially_local_cells.size();
+#pragma omp for
+  for (long i = 0; i < pl_size; i++) {
+    const auto &it = std::next(begin_1, i);
+    it->second.finish_update();
+  }
 }
 
 void PartialGrid::update(long long time_steps) {
@@ -196,8 +213,10 @@ void PartialGrid::update(long long time_steps) {
   particle_updates.reserve(size);
   mass_updates.reserve(size);
 
+#pragma omp parallel
   for (long long ll = 0; ll < time_steps; ll++) {
     long i = 0;
+
     // Receiving mass updates from each adjacent rank
     for (const auto &it : _adjacent_ranks) {
       int rank = it.first;
@@ -218,8 +237,11 @@ void PartialGrid::update(long long time_steps) {
     }
 
     // Sending the mass updates to each adjacent rank
-    for (auto &it : mass_updates) {
-      MPI_Isend(it.second.data(), it.second.size(), mpi_mass_t, it.first,
+    const auto &begin_0 = mass_updates.begin();
+#pragma omp for
+    for (long j = 0; j < size; ++j) {
+      const auto &it = std::next(begin_0, j);
+      MPI_Isend(it->second.data(), it->second.size(), mpi_mass_t, it->first,
                 MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
     }
 
@@ -229,6 +251,7 @@ void PartialGrid::update(long long time_steps) {
     // Waiting for mass updates isend/irecv
     MPI_Waitall(size * 2, requests.data(), statuses.data());
     for (const auto &array : masses) {
+#pragma omp for
       for (const auto &mass : array) {
         adjacent_cells.at(mass.id).mass = mass;
       }
@@ -246,18 +269,25 @@ void PartialGrid::update(long long time_steps) {
       cell.clear();
     }
 
-    i = 0;
     // Sending the particle updates to each adjacent rank
-    for (auto &it : particle_updates) {
-      MPI_Isend(it.second.data(), it.second.size(), mpi_particle_t, it.first,
+    i = 0;
+    const auto &begin_1 = particle_updates.begin();
+#pragma omp for
+    for (long j = 0; j < size; ++j) {
+      const auto &it = std::next(begin_1, j);
+      MPI_Isend(it->second.data(), it->second.size(), mpi_particle_t, it->first,
                 PARTICLE_UPDATE, MPI_COMM_WORLD, &requests[i++]);
     }
 
     _update_local_cells(fully_local_cells);
     _finish_local_updates();
 
-    for (auto &it : fully_local_cells) {
-      it.second.check_collisions();
+    const auto &begin_2 = fully_local_cells.begin();
+    long fl_size = fully_local_cells.size();
+#pragma omp for schedule(dynamic)
+    for (long j = 0; j < fl_size; ++j) {
+      const auto &it = std::next(begin_2, j);
+      it->second.check_collisions();
     }
 
     // Receiving particle updates from each adjacent rank
@@ -277,8 +307,12 @@ void PartialGrid::update(long long time_steps) {
       }
     }
 
-    for (auto &it : partially_local_cells) {
-      it.second.check_collisions();
+    const auto &begin_3 = partially_local_cells.begin();
+    long pl_size = partially_local_cells.size();
+#pragma omp for schedule(dynamic)
+    for (long j = 0; j < pl_size; j++) {
+      const auto &it = std::next(begin_3, j);
+      it->second.check_collisions();
     }
 
     // Waiting for particle updates isend
