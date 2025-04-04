@@ -350,17 +350,33 @@ void PartialGrid::sync_final_state() {
     }
   }
 
-  final_state_t state = {_first_particle, get_collisions()};
-  std::vector<final_state_t> states(_nprocs);
-  MPI_Gather(&state, 1, mpi_final_state_t, states.data(), 1, mpi_final_state_t,
-             0, MPI_COMM_WORLD);
+  // final_state_t state = {_first_particle, get_collisions()};
+  // std::vector<final_state_t> states(_nprocs);
+  // MPI_Gather(&state, 1, mpi_final_state_t, states.data(), 1, mpi_final_state_t,
+  //            0, MPI_COMM_WORLD);
+  // if (_rank == 0) {
+  //   for (const auto &s : states) {
+  //     _remote_collisions += s.collisions;
+  //     if (s.particle.first_particle) {
+  //       _first_particle = s.particle;
+  //     }
+  //   }
+  // }
+
   if (_rank == 0) {
-    for (const auto &s : states) {
-      _remote_collisions += s.collisions;
-      if (s.particle.first_particle) {
-        _first_particle = s.particle;
-      }
+    MPI_Status status;
+    final_state_t state;
+
+    for (int i = 1; i < _nprocs; ++i) {
+      MPI_Recv(&state, 1, mpi_final_state_t, i, FINAL_STATE, MPI_COMM_WORLD,
+               &status);
+      _remote_collisions += state.collisions;
+      if (state.particle.first_particle)
+        _first_particle = state.particle;
     }
+  } else {
+    final_state_t state = {_first_particle, get_collisions()};
+    MPI_Send(&state, 1, mpi_final_state_t, 0, FINAL_STATE, MPI_COMM_WORLD);
   }
 
   MPI_Type_free(&mpi_mass_t);
