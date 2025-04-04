@@ -242,7 +242,7 @@ void PartialGrid::update(long long time_steps) {
     for (long j = 0; j < size; ++j) {
       const auto &it = std::next(begin_0, j);
       MPI_Isend(it->second.data(), it->second.size(), mpi_mass_t, it->first,
-                MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
+                MASS_UPDATE, MPI_COMM_WORLD, &requests[i + j]);
     }
 
     _update_local_masses(fully_local_cells);
@@ -270,13 +270,12 @@ void PartialGrid::update(long long time_steps) {
     }
 
     // Sending the particle updates to each adjacent rank
-    i = 0;
     const auto &begin_1 = particle_updates.begin();
 #pragma omp for
     for (long j = 0; j < size; ++j) {
       const auto &it = std::next(begin_1, j);
       MPI_Isend(it->second.data(), it->second.size(), mpi_particle_t, it->first,
-                PARTICLE_UPDATE, MPI_COMM_WORLD, &requests[i++]);
+                PARTICLE_UPDATE, MPI_COMM_WORLD, &requests[j]);
     }
 
     _update_local_cells(fully_local_cells);
@@ -352,7 +351,8 @@ void PartialGrid::sync_final_state() {
 
   // final_state_t state = {_first_particle, get_collisions()};
   // std::vector<final_state_t> states(_nprocs);
-  // MPI_Gather(&state, 1, mpi_final_state_t, states.data(), 1, mpi_final_state_t,
+  // MPI_Gather(&state, 1, mpi_final_state_t, states.data(), 1,
+  // mpi_final_state_t,
   //            0, MPI_COMM_WORLD);
   // if (_rank == 0) {
   //   for (const auto &s : states) {
