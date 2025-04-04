@@ -100,7 +100,6 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
   int max_rank = partition_grid(nprocs, ncside, cell_size, partition, rank);
   PartialGrid grid(rank, max_rank, side, ncside);
 
-  std::vector<bool> grid_ranks = std::vector<bool>(nprocs, false);
   for (auto &it : partition) {
     int cid = it.first;
     CellLocation &loc = it.second;
