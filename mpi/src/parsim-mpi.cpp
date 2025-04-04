@@ -74,17 +74,13 @@ int partition_grid(int nprocs, long ncside, long n_part, double cell_size,
   std::pair<long, long> loc = {0, 0};
 
   while (loc.first != ncside && loc.second != ncside) {
-    long xsize = std::min(loc.first + size, ncside);
+    long xsize = loc.first;
     long ysize = std::min(loc.second + size, ncside);
 
-    for (long j = loc.first; j < xsize; ++j) {
+    for (; weight[proc] < target && xsize < ncside; ++xsize) {
       for (long i = loc.second; i < ysize; ++i) {
-        partition[j + i * ncside].rank = proc;
-        weight[proc] += partition[j + i * ncside].weight;
-      }
-      if (weight[proc] > target) {
-        xsize = j + 1;
-        break;
+        partition[xsize + i * ncside].rank = proc;
+        weight[proc] += partition[xsize + i * ncside].weight;
       }
     }
 
