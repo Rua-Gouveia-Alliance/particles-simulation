@@ -73,14 +73,14 @@ theoretically, the worst.
 \subsection{Blocks}
 
 To minimize communication between nodes, we experimented with splitting the grid
-into blocks. Each processor first computes the centers of mass for the cells
-that need to be communicated and sends them to the appropriate rank. While
-waiting to receive the centers of mass it requires, it computes the centers of
-mass for the cells that do not need to be communicated. The process for
-calculating particle positions is analogous.
+into blocks. Each task first computes the centers of mass for the cells that
+need to be communicated and sends them to the appropriate rank. While waiting to
+receive the centers of mass it requires, it computes the centers of mass for the
+cells that do not need to be communicated. The process for calculating particle
+positions is analogous.
 
 Block dimensions are computed dynamically. Let $ncside$ denote the size of the
-grid's sides, $nprocs$ the number of processors available to us, and $npart$ the
+grid's sides, $nprocs$ the number of tasks available to us, and $npart$ the
 total number of particles. Let $size = \max(ncside / 2, 5)$ denote the height of
 our blocks. Each cell has a weight corresponding to the number of particles
 assigned to it, and each rank has a weight equal to the sum of the weights of
@@ -91,29 +91,32 @@ the next rank in a round-robin fashion.
 
 \subsection{Blocks And OpenMP}
 
-After fine-tuning the values in our block strategy, we used OpenMP to
-paralellize the loop calculating the new particle positions. This further
-increased the running time of our program.
+After fine-tuning the parameters of our block strategy, we used OpenMP to
+parallelize the loop that calculates the new particle positions. This further
+reduced the running time of our program.
 
 \section{Synchronization Concerns}
 
-During our main loop there is only one point where some degree of
-synchronization happens,
+During the main loop, there is only one point where synchronization is required:
+after calculating the centers of mass of all the particles, each rank must wait
+to receive the centers of mass of the cells surrounding its block. Besides this,
+we use OpenMP's \texttt{critical} directive to synchronize access during the
+parallelized loop.
 
 \section{Load Balancing}
 
-With OpenMP we used dynamic scheduling to evenly distribute computation across
-threads. This technique distributes workload among threads at runtime rather
-than assigning it statically before execution. Comparing the static vs dynamic
-approach, the latter gives us the best performance of the two.
+Our block construction inherently balances the load by dynamically adjusting the
+size of the blocks to achieve a more homogeneous distribution of particles
+across ranks. Additionally, we use OpenMP's dynamic scheduling in our
+parallelized loop.
 
 \section{Performance Results}
 
 \subsection{Methodology}
 
-We tested four variations 
-For analysing the performance of our implementation we used the following
-inputs:
+We tested our solution multiple times, using different numbers of tasks to
+refine our strategies for block calculation and load balancing. The following
+tests were used:
 
 \begin{center}
     \begin{tabular}{ | c c | }
