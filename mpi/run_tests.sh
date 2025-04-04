@@ -2,12 +2,13 @@
 
 lines="83b2a6e80b806169ba35b56bf557eac9d12ebcd6" # Commit previous to 'implement blocks'
 blocks="29b80082ee62a06fa670129aa4a6c565c0122326" # Commit previous to 'implement load balancing'
-balancing="80deed8fd845680bb4e32b025ea099ae74c59a14"
+balancing="80deed8fd845680bb4e32b025ea099ae74c59a14" # Commit 'implement load balancing'
+balancingv2="3cf326e99d304f7aba0cad0ff09f01fa54e52ebd" # Commit 'implement load balancing v2'
 # openmp
 
 # Commits to test
-hashes=("$lines" "$blocks" "$balancing")
-commits=("lines" "blocks" "balancing")
+hashes=("$lines" "$blocks" "$balancing" "$balancingv2")
+commits=("lines" "blocks" "balancing" "balancingv2")
 
 # Stashing any changes before changing commits
 git stash
