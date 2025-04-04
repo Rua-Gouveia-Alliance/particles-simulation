@@ -1,0 +1,45 @@
+TEST 01s -> 0.0s
+TEST 02s -> TEST 03s -> 0.0s
+Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 04s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 01s -> 0.0s
+TEST 02s -> TEST 03s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 04s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 05s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 06s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 07s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 08s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 09s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 10s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 11s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 12s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 01s -> 0.0s
+TEST 02s -> 0.0s
+TEST 03s -> 0.0s
+TEST 04s -> 13.4s
+TEST 05s -> TEST 06s -> Abort is in progress...hit ctrl-c again to forcibly terminate
+
+TEST 07s -> TEST 01s -> 0.0s
+TEST 02s -> 0.0s
+TEST 03s -> 0.0s
+TEST 04s -> 12.9s
+TEST 05s -> 12.6s
+TEST 06s -> 6.5s
+TEST 07s -> 135.5s
+TEST 08s -> 12.2s
+TEST 09s -> 96.3s
+TEST 10s -> 131.7s
+TEST 11s -> 223.5s
+TEST 12s -> 18.8s
