@@ -1,5 +1,5 @@
 #include "Cell.hpp"
-#include "CellLocation.hpp"
+#include "CellInfo.hpp"
 #include "PartialCell.hpp"
 #include "PartialGrid.hpp"
 #include "Particle.hpp"
@@ -60,11 +60,16 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par[0].first_particle = true;
 }
 
-int partition_grid(int nprocs, long ncside, double cell_size,
-                   std::unordered_map<int, CellLocation> &partition, int rank) {
+int partition_grid(int nprocs, long ncside, long n_part, double cell_size,
+                   std::vector<CellInfo> &partition) {
   partition.reserve(ncside * ncside);
   int max_rank = 0;
-  int proc = 0; // Process we are currently assigning cells to
+  // Process we are currently assigning cells to
+  int proc = 0;
+  // Weight each proc is responsible for
+  std::vector<long> weight(nprocs, 0);
+  // We want each proc to have roughly the same weight
+  long target = n_part / nprocs;
   int size = std::max(5, (int)std::sqrt((ncside * ncside) / nprocs));
   std::pair<long, long> loc = {0, 0};
 
@@ -72,11 +77,14 @@ int partition_grid(int nprocs, long ncside, double cell_size,
     long xsize = std::min(loc.first + size, ncside);
     long ysize = std::min(loc.second + size, ncside);
 
-    for (long i = loc.second; i < ysize; ++i) {
-      double y = i * cell_size;
-      for (long j = loc.first; j < xsize; ++j) {
-        double x = j * cell_size;
-        partition.emplace(j + i * ncside, CellLocation(x, y, proc));
+    for (long j = loc.first; j < xsize; ++j) {
+      for (long i = loc.second; i < ysize; ++i) {
+        partition[j + i * ncside].rank = proc;
+        weight[proc] += partition[j + i * ncside].weight;
+      }
+      if (weight[proc] > target) {
+        xsize = j + 1;
+        break;
       }
     }
 
@@ -96,27 +104,42 @@ int partition_grid(int nprocs, long ncside, double cell_size,
 PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
                       std::vector<Particle> &pv) {
   double cell_size = side / ncside;
-  std::unordered_map<int, CellLocation> partition;
-  int max_rank = partition_grid(nprocs, ncside, cell_size, partition, rank);
+  std::vector<CellInfo> partition;
+
+  // Creating cell information
+  for (long i = 0; i < ncside; ++i) {
+    double y = i * cell_size;
+    for (long j = 0; j < ncside; ++j) {
+      double x = j * cell_size;
+      partition.emplace_back(j + i * ncside, x, y);
+    }
+  }
+
+  // Assign particles to corresponding cells
+  for (auto &p : pv) {
+    long cell_x = static_cast<long>(p.x / cell_size);
+    long cell_y = static_cast<long>(p.y / cell_size);
+    long idx = cell_x + cell_y * ncside;
+    partition[idx].add_particle(p);
+  }
+
+  int max_rank =
+      partition_grid(nprocs, ncside, pv.size(), cell_size, partition);
   PartialGrid grid(rank, max_rank, side, ncside);
 
-  for (auto &it : partition) {
-    int cid = it.first;
-    CellLocation &loc = it.second;
+  for (auto &info : partition) {
+    int cid = info.id;
     std::unordered_set<int> adj;
     bool owner_is_adjacent = false;
     std::vector<long> adj_cells = PartialGrid::get_adjacent_cells(cid, ncside);
 
-    if (loc.rank == rank)
-      adj.reserve(adj_cells.size());
-
     for (const auto &id : adj_cells) {
-      if (partition.at(id).rank == rank) {
+      if (partition[id].rank == rank) {
         owner_is_adjacent = true;
         continue;
       }
 
-      if (loc.rank != rank) {
+      if (info.rank != rank) {
         if (owner_is_adjacent) {
           break;
         } else {
@@ -124,47 +147,28 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
         }
       }
 
-      adj.insert(partition.at(id).rank);
-      grid.add_adjacent_rank(partition.at(id).rank);
-      if (!partition.at(id).counted) {
-        partition.at(id).counted = true;
-        grid.increment_adjacent_rank(partition.at(id).rank);
+      adj.insert(partition[id].rank);
+      grid.add_adjacent_rank(partition[id].rank);
+      if (!partition[id].counted) {
+        partition[id].counted = true;
+        grid.increment_adjacent_rank(partition[id].rank);
       }
     }
 
-    if (loc.rank == rank) {
-      Cell cell = Cell(cid, adj, loc.x, loc.y, cell_size);
+    if (info.rank == rank) {
+      Cell cell = Cell(info, adj, cell_size);
       grid.add_local_cell(cell);
     } else if (owner_is_adjacent) {
-      PartialCell cell = PartialCell(cid, loc.rank, loc.x, loc.y, cell_size);
+      PartialCell cell = PartialCell(info, cell_size);
       grid.add_adjacent_cell(cell);
     }
   }
 
-  // assign particles to corresponding cells
-  for (auto &p : pv) {
-    long cell_x = static_cast<long>(p.x / cell_size);
-    long cell_y = static_cast<long>(p.y / cell_size);
-    long idx = cell_x + cell_y * ncside;
-    if (partition.at(idx).rank == rank) {
-      if (grid.fully_local_cells.find(idx) != grid.fully_local_cells.end()) {
-        grid.fully_local_cells.at(idx).add_particle(p);
-      } else {
-        grid.partially_local_cells.at(idx).add_particle(p);
-      }
-    }
-  }
-
-  // initialize cell
-  for (auto &it : grid.fully_local_cells) {
-    it.second.finish_update();
+  // Initialize cells
+  for (auto &it : grid.fully_local_cells)
     it.second.check_collisions();
-  }
-
-  for (auto &it : grid.partially_local_cells) {
-    it.second.finish_update();
+  for (auto &it : grid.partially_local_cells)
     it.second.check_collisions();
-  }
 
   return grid;
 }

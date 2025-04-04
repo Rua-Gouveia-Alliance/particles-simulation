@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CellInfo.hpp"
 #include "Mass.hpp"
 #include "Particle.hpp"
 #include <vector>
@@ -14,8 +15,9 @@ public:
   double x, y, side;
   std::vector<Particle> particles;
 
-  PartialCell(long id, int owner, double x, double y, double side)
-      : _id(id), owner(owner), x(x), y(y), side(side), mass({id, -1, -1, 0}){};
+  PartialCell(CellInfo info, double side)
+      : _id(info.id), owner(info.rank), x(info.x), y(info.y), side(side),
+        mass({info.id, -1, -1, 0}){};
 
   void add_particle(Particle &p) { particles.push_back(p); }
   void clear() { particles.clear(); }

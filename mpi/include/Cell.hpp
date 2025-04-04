@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CellInfo.hpp"
 #include "Mass.hpp"
 #include "PartialCell.hpp"
 #include "Particle.hpp"
@@ -18,15 +19,15 @@ private:
 
 public:
   Mass mass;
-  long collisions = 0;
   double x, y, side;
+  long collisions = 0;
   std::vector<Particle> particles;
   std::unordered_set<int> adjacent_ranks;
 
-  Cell(long id, std::unordered_set<int> &adjacent_ranks, double x, double y,
-       double side)
-      : _id(id), adjacent_ranks(adjacent_ranks), x(x), y(y), side(side),
-        mass({id, -1, -1, 0}){};
+  Cell(CellInfo info, std::unordered_set<int> &adjacent_ranks, double side)
+      : _id(info.id), x(info.x), y(info.y),
+        adjacent_ranks(std::move(adjacent_ranks)), side(side),
+        mass({info.id, -1, -1, 0}), particles(std::move(info.particles)){};
 
   void update_mass();
   void add_particle(Particle &p) { _temp_particles.push_back(p); }

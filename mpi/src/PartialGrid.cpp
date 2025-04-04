@@ -197,10 +197,9 @@ void PartialGrid::update(long long time_steps) {
     for (const auto &it : _adjacent_ranks) {
       int rank = it.first;
       long element_count = it.second;
-      std::vector<Mass> mvec(element_count);
-      masses.push_back(mvec);
-      MPI_Irecv(mvec.data(), element_count, mpi_mass_t, rank, MASS_UPDATE,
-                MPI_COMM_WORLD, &requests[i++]);
+      masses.push_back(std::vector<Mass>(element_count));
+      MPI_Irecv(masses.back().data(), element_count, mpi_mass_t, rank,
+                MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
     }
 
     _update_local_masses(partially_local_cells);
