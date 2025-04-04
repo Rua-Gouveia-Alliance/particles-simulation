@@ -68,8 +68,8 @@ void partition_grid(int nprocs, long ncside, long n_part, double cell_size,
   // Weight each proc is responsible for
   std::vector<long> weight(nprocs, 0);
   // We want each proc to have roughly the same weight
-  long target = n_part / nprocs;
-  int size = std::max(5, (int)std::sqrt((ncside * ncside) / nprocs));
+  long target = std::max(n_part / nprocs, (long)10);
+  int size = std::max(ncside / 2, (long)5);
   std::pair<long, long> loc = {0, 0};
 
   while (loc.first != ncside && loc.second != ncside) {
