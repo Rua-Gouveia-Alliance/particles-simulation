@@ -60,10 +60,9 @@ void init_particles(long seed, double side, long ncside, long long n_part,
   par[0].first_particle = true;
 }
 
-int partition_grid(int nprocs, long ncside, long n_part, double cell_size,
-                   std::vector<CellInfo> &partition) {
+void partition_grid(int nprocs, long ncside, long n_part, double cell_size,
+                    std::vector<CellInfo> &partition) {
   partition.reserve(ncside * ncside);
-  int max_rank = 0;
   // Process we are currently assigning cells to
   int proc = 0;
   // Weight each proc is responsible for
@@ -91,10 +90,7 @@ int partition_grid(int nprocs, long ncside, long n_part, double cell_size,
       loc.first = xsize;
     }
     proc = (proc + 1) % nprocs;
-    ++max_rank;
   }
-
-  return std::min(max_rank, nprocs) - 1;
 }
 
 PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
@@ -119,9 +115,8 @@ PartialGrid init_grid(int rank, int nprocs, double side, long ncside,
     partition[idx].add_particle(p);
   }
 
-  int max_rank =
-      partition_grid(nprocs, ncside, pv.size(), cell_size, partition);
-  PartialGrid grid(rank, max_rank, side, ncside);
+  partition_grid(nprocs, ncside, pv.size(), cell_size, partition);
+  PartialGrid grid(rank, nprocs, side, ncside);
 
   for (auto &info : partition) {
     int cid = info.id;
@@ -210,11 +205,6 @@ int main(int argc, char *argv[]) {
 
     exec_time = -omp_get_wtime();
     PartialGrid grid = init_grid(rank, nprocs, side, ncside, particles);
-    if (rank > grid.max_rank) {
-      grid.finish();
-      MPI_Finalize();
-      return 0;
-    }
     simulation(grid, time_steps);
     exec_time += omp_get_wtime();
 

@@ -10,8 +10,8 @@
 #define PARTICLE_UPDATE 2
 #define FINAL_STATE 3
 
-PartialGrid::PartialGrid(int rank, int max_rank, double side, long ncside)
-    : _rank(rank), max_rank(max_rank), _side(side), _ncside(ncside),
+PartialGrid::PartialGrid(int rank, int nprocs, double side, long ncside)
+    : _rank(rank), _nprocs(nprocs), _side(side), _ncside(ncside),
       _first_particle({.first_particle = false}) {
 
   int m_count = 4;
@@ -181,6 +181,11 @@ void PartialGrid::_finish_local_updates() {
 }
 
 void PartialGrid::update(long long time_steps) {
+  // This rank is not responsible for any cells
+  if (fully_local_cells.size() == 0 && partially_local_cells.size() == 0) {
+    return;
+  }
+
   long size = _adjacent_ranks.size();
   std::vector<MPI_Request> requests(size * 2);
   std::vector<std::vector<Mass>> masses;
@@ -311,43 +316,22 @@ void PartialGrid::sync_final_state() {
     }
   }
 
-  // final_state_t state = {_first_particle, get_collisions()};
-  // std::vector<final_state_t> states(_max_rank + 1);
-  // MPI_Gather(&state, 1, mpi_final_state_t, states.data(), _max_rank + 1,
-  //            mpi_final_state_t, 0, MPI_COMM_WORLD);
-  // if (_rank == 0) {
-  //   for (const auto &s : states) {
-  //     _remote_collisions += state.collisions;
-  //     if (state.particle.first_particle)
-  //       _first_particle = state.particle;
-  //   }
-  // }
-
-  // TODO: Use the gather above instead of using recv for all ranks
+  final_state_t state = {_first_particle, get_collisions()};
+  std::vector<final_state_t> states(_nprocs);
+  MPI_Gather(&state, 1, mpi_final_state_t, states.data(), 1, mpi_final_state_t,
+             0, MPI_COMM_WORLD);
   if (_rank == 0) {
-    MPI_Status status;
-    final_state_t state;
-
-    // TODO MPI Gather?
-    for (int i = 1; i < max_rank + 1; ++i) {
-      MPI_Recv(&state, 1, mpi_final_state_t, i, FINAL_STATE, MPI_COMM_WORLD,
-               &status);
-      _remote_collisions += state.collisions;
-      if (state.particle.first_particle)
-        _first_particle = state.particle;
+    for (const auto &s : states) {
+      _remote_collisions += s.collisions;
+      if (s.particle.first_particle) {
+        _first_particle = s.particle;
+      }
     }
-  } else {
-    final_state_t state = {_first_particle, get_collisions()};
-    MPI_Send(&state, 1, mpi_final_state_t, 0, FINAL_STATE, MPI_COMM_WORLD);
   }
 
-  MPI_Type_free(&mpi_final_state_t);
-  finish();
-}
-
-void PartialGrid::finish() {
   MPI_Type_free(&mpi_mass_t);
   MPI_Type_free(&mpi_particle_t);
+  MPI_Type_free(&mpi_final_state_t);
 }
 
 long PartialGrid::get_collisions() const {
