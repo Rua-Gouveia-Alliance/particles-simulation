@@ -180,100 +180,106 @@ void PartialGrid::_finish_local_updates() {
     it.second.finish_update();
 }
 
-void PartialGrid::update() {
+void PartialGrid::update(long long time_steps) {
   long size = _adjacent_ranks.size();
   std::vector<MPI_Request> requests(size * 2);
   std::vector<std::vector<Mass>> masses;
-  masses.reserve(size);
-
-  long i = 0;
-  // Receiving mass updates from each adjacent rank
-  for (const auto &it : _adjacent_ranks) {
-    int rank = it.first;
-    long element_count = it.second;
-    masses.push_back(std::vector<Mass>(element_count));
-    MPI_Irecv(masses.back().data(), element_count, mpi_mass_t, rank,
-              MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
-  }
-
-  _update_local_masses(partially_local_cells);
-
-  // Calculating the mass updates to send to each adjacent rank
-  std::unordered_map<int, std::vector<Mass>> mass_updates;
-  mass_updates.reserve(size);
-  for (const auto &it : partially_local_cells) {
-    for (const auto &id : it.second.adjacent_ranks) {
-      mass_updates[id].push_back(it.second.mass);
-    }
-  }
-
-  // Sending the mass updates to each adjacent rank
-  for (auto &it : mass_updates) {
-    MPI_Isend(it.second.data(), it.second.size(), mpi_mass_t, it.first,
-              MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
-  }
-
-  _update_local_masses(fully_local_cells);
-
-  std::vector<MPI_Status> statuses(size * 2);
-  // Waiting for mass updates isend/irecv
-  MPI_Waitall(size * 2, requests.data(), statuses.data());
-  for (const auto &array : masses) {
-    for (const auto &mass : array) {
-      adjacent_cells.at(mass.id).mass = mass;
-    }
-  }
-
-  _update_local_cells(partially_local_cells);
-
-  // Calculating the particle updates to send to each adjacent rank
   std::unordered_map<int, std::vector<Particle>> particle_updates;
+  std::unordered_map<int, std::vector<Mass>> mass_updates;
+
+  masses.reserve(size);
   particle_updates.reserve(size);
-  for (auto &it : adjacent_cells) {
-    PartialCell &cell = it.second;
-    std::vector<Particle> &update = particle_updates[cell.owner];
-    std::move(cell.particles.begin(), cell.particles.end(),
-              std::back_inserter(update));
-    cell.clear();
-  }
+  mass_updates.reserve(size);
 
-  i = 0;
-  // Sending the particle updates to each adjacent rank
-  for (auto &it : particle_updates) {
-    MPI_Isend(it.second.data(), it.second.size(), mpi_particle_t, it.first,
-              PARTICLE_UPDATE, MPI_COMM_WORLD, &requests[i++]);
-  }
-
-  _update_local_cells(fully_local_cells);
-  _finish_local_updates();
-
-  for (auto &it : fully_local_cells) {
-    it.second.check_collisions();
-  }
-
-  // Receiving particle updates from each adjacent rank
-  for (const auto &it : _adjacent_ranks) {
-    int count;
-    MPI_Status status;
-    MPI_Probe(it.first, PARTICLE_UPDATE, MPI_COMM_WORLD, &status);
-    MPI_Get_count(&status, mpi_particle_t, &count);
-
-    std::vector<Particle> particles(count);
-    MPI_Recv(particles.data(), count, mpi_particle_t, it.first, PARTICLE_UPDATE,
-             MPI_COMM_WORLD, &status);
-
-    for (auto &p : particles) {
-      long idx = _get_particle_index(p);
-      partially_local_cells.at(idx).add_updated_particle(p);
+  for (long long ll = 0; ll < time_steps; ll++) {
+    long i = 0;
+    // Receiving mass updates from each adjacent rank
+    for (const auto &it : _adjacent_ranks) {
+      int rank = it.first;
+      long element_count = it.second;
+      std::vector<Mass> mvec(element_count);
+      masses.push_back(mvec);
+      MPI_Irecv(mvec.data(), element_count, mpi_mass_t, rank, MASS_UPDATE,
+                MPI_COMM_WORLD, &requests[i++]);
     }
-  }
 
-  for (auto &it : partially_local_cells) {
-    it.second.check_collisions();
-  }
+    _update_local_masses(partially_local_cells);
 
-  // Waiting for particle updates isend
-  MPI_Waitall(size, requests.data(), statuses.data());
+    // Calculating the mass updates to send to each adjacent rank
+    mass_updates.clear();
+    for (const auto &it : partially_local_cells) {
+      for (const auto &id : it.second.adjacent_ranks) {
+        mass_updates[id].push_back(it.second.mass);
+      }
+    }
+
+    // Sending the mass updates to each adjacent rank
+    for (auto &it : mass_updates) {
+      MPI_Isend(it.second.data(), it.second.size(), mpi_mass_t, it.first,
+                MASS_UPDATE, MPI_COMM_WORLD, &requests[i++]);
+    }
+
+    _update_local_masses(fully_local_cells);
+
+    std::vector<MPI_Status> statuses(size * 2);
+    // Waiting for mass updates isend/irecv
+    MPI_Waitall(size * 2, requests.data(), statuses.data());
+    for (const auto &array : masses) {
+      for (const auto &mass : array) {
+        adjacent_cells.at(mass.id).mass = mass;
+      }
+    }
+
+    _update_local_cells(partially_local_cells);
+
+    // Calculating the particle updates to send to each adjacent rank
+    particle_updates.clear();
+    for (auto &it : adjacent_cells) {
+      PartialCell &cell = it.second;
+      std::vector<Particle> &update = particle_updates[cell.owner];
+      std::move(cell.particles.begin(), cell.particles.end(),
+                std::back_inserter(update));
+      cell.clear();
+    }
+
+    i = 0;
+    // Sending the particle updates to each adjacent rank
+    for (auto &it : particle_updates) {
+      MPI_Isend(it.second.data(), it.second.size(), mpi_particle_t, it.first,
+                PARTICLE_UPDATE, MPI_COMM_WORLD, &requests[i++]);
+    }
+
+    _update_local_cells(fully_local_cells);
+    _finish_local_updates();
+
+    for (auto &it : fully_local_cells) {
+      it.second.check_collisions();
+    }
+
+    // Receiving particle updates from each adjacent rank
+    for (const auto &it : _adjacent_ranks) {
+      int count;
+      MPI_Status status;
+      MPI_Probe(it.first, PARTICLE_UPDATE, MPI_COMM_WORLD, &status);
+      MPI_Get_count(&status, mpi_particle_t, &count);
+
+      std::vector<Particle> particles(count);
+      MPI_Recv(particles.data(), count, mpi_particle_t, it.first,
+               PARTICLE_UPDATE, MPI_COMM_WORLD, &status);
+
+      for (auto &p : particles) {
+        long idx = _get_particle_index(p);
+        partially_local_cells.at(idx).add_updated_particle(p);
+      }
+    }
+
+    for (auto &it : partially_local_cells) {
+      it.second.check_collisions();
+    }
+
+    // Waiting for particle updates isend
+    MPI_Waitall(size, requests.data(), statuses.data());
+  }
 }
 
 void PartialGrid::sync_final_state() {

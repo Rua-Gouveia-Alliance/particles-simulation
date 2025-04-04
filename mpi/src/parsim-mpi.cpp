@@ -177,6 +177,11 @@ void print_result(PartialGrid &g) {
   std::cout << g.get_collisions() << std::endl;
 }
 
+void simulation(PartialGrid &grid, long long time_steps) {
+  grid.update(time_steps);
+  grid.sync_final_state();
+}
+
 int main(int argc, char *argv[]) {
   double exec_time;
   std::vector<Particle> particles;
@@ -211,10 +216,7 @@ int main(int argc, char *argv[]) {
       MPI_Finalize();
       return 0;
     }
-
-    for (long long ll = 0; ll < time_steps; ll++)
-      grid.update();
-    grid.sync_final_state();
+    simulation(grid, time_steps);
     exec_time += omp_get_wtime();
 
     if (rank == 0) {

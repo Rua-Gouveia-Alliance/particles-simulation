@@ -45,7 +45,7 @@ public:
   void add_adjacent_rank(int rank) { _adjacent_ranks.try_emplace(rank, 0); }
   void increment_adjacent_rank(int rank) { ++_adjacent_ranks.at(rank); }
 
-  void update();
+  void update(long long time_steps);
   void sync_final_state();
   void finish();
 
