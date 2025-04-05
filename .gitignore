@@ -1,4 +1,7 @@
 build/
 */test/out
+*/report/*.out
+*/report/*.log
+*/report/*.aux
 parsim
 .DS_Store
